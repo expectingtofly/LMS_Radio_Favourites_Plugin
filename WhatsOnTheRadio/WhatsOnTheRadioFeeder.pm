@@ -52,7 +52,7 @@ sub stationlist {
         main::DEBUGLOG && $log->is_debug && $log->debug("Station loop");
         main::DEBUGLOG && $log->is_debug && $log->debug(Dumper($station));
         if (my $function = getFunctionFromKey($station->{handlerFunctionKey})) {
-            $function->($station->{url}, $station->{stationKey}, 'now', 
+            $function->($station->{url}, $station->{stationKey}, $station->{name}, 'now', 
             sub {  ## success
                 my $result = shift;
                 main::DEBUGLOG && $log->is_debug && $log->debug("Success");
@@ -60,32 +60,35 @@ sub stationlist {
                 my $startTime =  strftime( '%H:%M ', localtime($result->{startTime}) );
                 my $endTime =  strftime( '%H:%M ', localtime($result->{endTime}) );
                 push @$menu, {
-                    name        => $station->{name} . ' - ' .  $result->{title},
+                    name        => $result->{stationName} . ' - ' .  $result->{title},
 					type        => 'audio',                    
                     line2       =>  $startTime . ' to ' . $endTime . ' ' . $result->{description},                    					
 					image       => $result->{image},					
-					url         => $station->{url},					
+					url         => $result->{url},					
 					on_select   => 'play'
                 };
                 $stationCounter++;
                 main::DEBUGLOG && $log->is_debug && $log->debug("Got it $stationCounter $stationCount");
                 if ($stationCounter >= $stationCount) {                     
                     main::DEBUGLOG && $log->is_debug && $log->debug("Complete collection");
+                    @$menu = sort { $a->{name} cmp $b->{name} } @$menu;
                     $callback->( { items => $menu } );
                 }
             },
             sub {  ## failure
-             main::DEBUGLOG && $log->is_debug && $log->debug("Fail");
+             my $result = shift;
+             $log->warn('Failed to retrieve station now on data');
              push @$menu, {
-                    name        => $station->{name},
+                    name        => $result->{stationName},
 					type        => 'audio',
                     artist      => 'Could not retrieve now playing',                      
-					url         => $station->{url},					
+					url         => $result->{url},					
 					on_select   => 'play'
                 };
                 $stationCounter++;
                 main::DEBUGLOG && $log->is_debug && $log->debug("Fail $StationCounter $stationCount");
                 if ($stationCounter >= $stationCount) {
+                    @$menu = sort { $a->{name} cmp $b->{name} } @$menu;
                     $callback->( { items => $menu } );
                 }
 

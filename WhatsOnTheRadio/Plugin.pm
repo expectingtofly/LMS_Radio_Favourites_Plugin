@@ -114,9 +114,7 @@ sub addStationToWOTR {
 	main::DEBUGLOG && $log->is_debug && $log->debug("StationDetails : " . Dumper($stationDetails));
 
 	push @$stationList, $stationDetails;
-	main::DEBUGLOG && $log->is_debug && $log->debug("StationList : " . Dumper($stationList));
-
-	@$stationList = sort { $a->{name} <=> $b->{name} } @$stationList;
+	main::DEBUGLOG && $log->is_debug && $log->debug("StationList : " . Dumper($stationList));	
 
 	$prefs->set( 'WOTR_StationList', $stationList );
 
