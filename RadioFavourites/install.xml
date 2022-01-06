@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <extension>
-	<name>PLUGIN_WHATSONTHERADIO</name>
-	<module>Plugins::WhatsOnTheRadio::Plugin</module>	        
-	<version>0.0.33</version>
-	<description>PLUGIN_WHATSONTHERADIO_DESC</description>
+	<name>PLUGIN_RADIOFAVOURITES</name>
+	<module>Plugins::RadioFavourites::Plugin</module>	        
+	<version>0.0.62</version>
+	<description>PLUGIN_RADIOFAVOURITES_DESC</description>
 	<creator>ExpectingToFly</creator>	
 	<homepageURL>https://github.com/expectingtofly/LMS_Whats_On_The_Radio_Plugin</homepageURL>	
 	<defaultState>enabled</defaultState>
@@ -12,5 +12,5 @@
 		<minVersion>7.9</minVersion>
         <maxVersion>*</maxVersion>
 	</targetApplication>
-	<optionsURL>plugins/WhatsOnTheRadio/settings/basic.html</optionsURL>	
+	<optionsURL>plugins/RadioFavourites/settings/basic.html</optionsURL>	
 </extension>

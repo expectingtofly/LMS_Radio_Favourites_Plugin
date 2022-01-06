@@ -1,17 +1,24 @@
 [% PROCESS settings/header.html %]
 
-[% WRAPPER setting title="PLUGIN_WHATSONTHERADIO_RADIOMENU" desc="PLUGIN_WHATSONTHERADIO_RADIOMENU_DESC" %]
+[% WRAPPER setting title="PLUGIN_RADIOFAVOURITES_RADIOMENU" desc="PLUGIN_RADIOFAVOURITES_RADIOMENU_DESC" %]
 
 <div class="prefDesc">[% "ENABLE" | string %]
     <input name="pref_is_radio" type="checkbox" [% IF prefs.pref_is_radio %] checked [% END %]>
 </div>
 
+[% END %]
+
 
 [% WRAPPER setting title="Clear Favourite Stations" desc="" %]	
 <input name="clearFavouriteStations" type="checkbox" >
-<label for="clearFavouriteStations">Clear favourite stations</label>	
-[% END %]
 
 [% END %]
+
+[% WRAPPER setting title="Delete All Folders" desc="" %]	
+<input name="deleteAllFolders" type="checkbox" >
+
+[% END %]
+
+
 
 [% PROCESS settings/footer.html %]
