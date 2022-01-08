@@ -55,9 +55,7 @@ sub stationlist {
 	my $stationCounter = 0;
 
 	my $menu = [];
-	my $folderMenu = [];
-
-	main::DEBUGLOG && $log->is_debug && $log->debug("Folder List : " . Dumper($folderList));
+	my $folderMenu = [];	
 
 	if ($folderList) {
 		for my $folder (@$folderList) {
@@ -76,9 +74,6 @@ sub stationlist {
 		}
 	}
 
-	main::DEBUGLOG && $log->is_debug && $log->debug("Folder Menu : " . Dumper($folderMenu));
-
-
 	if ($stationCount == 0) {
 		main::DEBUGLOG && $log->is_debug && $log->debug("No Stations");
 		$callback->( { items => [{name=> string('PLUGIN_RADIOFAVOURITES_NOSTATIONS_MESSAGE'), type=>'text'}] } );
@@ -87,9 +82,7 @@ sub stationlist {
 
 	main::DEBUGLOG && $log->is_debug && $log->debug("Stations : $stationCount");
 	my $i = 0;
-	for my $station (@$stationList) {
-		main::DEBUGLOG && $log->is_debug && $log->debug("Station loop");
-		main::DEBUGLOG && $log->is_debug && $log->debug(Dumper($station));
+	for my $station (@$stationList) {		
 		if (my $function = getFunctionFromKey($station->{handlerFunctionKey})) {
 			$function->(
 				$station->{url},
@@ -97,9 +90,7 @@ sub stationlist {
 				$station->{name},
 				'now',
 				sub {  ## success
-					my $result = shift;
-					main::DEBUGLOG && $log->is_debug && $log->debug("Success");
-					main::DEBUGLOG && $log->is_debug && $log->debug(Dumper($result));
+					my $result = shift;					
 					my $startTime =  strftime( '%H:%M ', localtime($result->{startTime}) );
 					my $endTime =  strftime( '%H:%M ', localtime($result->{endTime}) );
 					my $item = {
@@ -122,10 +113,10 @@ sub stationlist {
 						push @$menu, $item;
 					}
 					$stationCounter++;
-					main::DEBUGLOG && $log->is_debug && $log->debug("Got it $stationCounter $stationCount");
+					main::DEBUGLOG && $log->is_debug && $log->debug("Station Programme Collection : $stationCounter $stationCount");
 
 					if ($stationCounter >= $stationCount) {
-						main::DEBUGLOG && $log->is_debug && $log->debug("Complete collection");
+						main::DEBUGLOG && $log->is_debug && $log->debug("Complete station collection");
 						@$menu = sort { $a->{name} cmp $b->{name} } @$menu;
 						arrangeMenus($menu, $folderMenu);
 						$callback->( { items => $menu } );
@@ -153,7 +144,7 @@ sub stationlist {
 					}
 
 					$stationCounter++;
-					main::DEBUGLOG && $log->is_debug && $log->debug("Fail $stationCounter $stationCount");
+					main::DEBUGLOG && $log->is_debug && $log->debug("Fail Station Collection $stationCounter $stationCount");
 					if ($stationCounter >= $stationCount) {
 						arrangeMenus($menu, $folderMenu);
 						$callback->( { items => $menu } );
@@ -183,7 +174,7 @@ sub stationlist {
 			}
 
 			$stationCounter++;
-			main::DEBUGLOG && $log->is_debug && $log->debug("Fail $stationCounter $stationCount");
+			main::DEBUGLOG && $log->is_debug && $log->debug("Fail Station collection No Function key $stationCounter $stationCount");
 			if ($stationCounter >= $stationCount) {
 				arrangeMenus($menu, $folderMenu);
 				$callback->( { items => $menu } );
@@ -205,8 +196,7 @@ sub arrangeMenus{
 	unshift @$menu, @$folderMenu;
 
 	createFolderMenu($menu);
-
-	main::DEBUGLOG && $log->is_debug && $log->debug(Dumper($menu));
+	
 	return;
 }
 
@@ -226,13 +216,11 @@ sub createFolderMenu {
 
 
 sub createFolder {
-	my ( $client, $callback, $args, $passDict ) = @_;
-
-	main::DEBUGLOG && $log->is_debug && $log->debug('Dict' . Dumper($passDict));
+	my ( $client, $callback, $args, $passDict ) = @_;	
 
 	my $folder = $args->{'search'};
 
-	main::DEBUGLOG && $log->is_debug && $log->debug("folder $folder");
+	main::DEBUGLOG && $log->is_debug && $log->debug("Create Folder $folder");
 
 	push @$folderList, $folder;
 
@@ -254,8 +242,7 @@ sub createFolder {
 
 sub setFolderList {
 	my $list = shift;
-	$folderList = $list;
-	main::DEBUGLOG && $log->is_debug && $log->debug('New FolderList' . Dumper($folderList));
+	$folderList = $list;	
 }
 
 
@@ -264,7 +251,6 @@ sub getFunctionFromKey {
 
 	my $handlerList = Plugins::RadioFavourites::Plugin::getHandlers();
 
-	main::DEBUGLOG && $log->is_debug && $log->debug(Dumper($handlerList));
 	main::DEBUGLOG && $log->is_debug && $log->debug("Function Key $key");
 
 	for my $handler (@$handlerList) {

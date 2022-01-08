@@ -2,7 +2,7 @@ PLUGIN_RADIOFAVOURITES
 	EN	Radio Favourites
 
 PLUGIN_RADIOFAVOURITES_DESC
-	EN	Radio Favourites - Manage your faviourite radios stations and see the currently live programme
+	EN	Radio Favourites - Manage your favourite radios stations. Select your station according to the current live programme.
 
 PLUGIN_RADIOFAVOURITES_RADIOMENU
 	EN	Show in "Radio" Menu

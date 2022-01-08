@@ -45,8 +45,6 @@ my $stationList = $prefs->get('Radio_Favourites_StationList');
 my $handlerList = [];
 
 
-
-
 sub initPlugin {
 	my $class = shift;
 
@@ -82,8 +80,9 @@ sub initPlugin {
 	return;
 }
 
+
 sub postinitPlugin {
-	
+
 	Plugins::RadioFavourites::RadioFavouritesFeeder::init();
 
 	return;
@@ -134,7 +133,6 @@ sub addStationToWOTR {
 	}
 
 	push @$stationList, $stationDetails;
-	main::DEBUGLOG && $log->is_debug && $log->debug("StationList : " . Dumper($stationList));	
 
 	$prefs->set( 'Radio_Favourites_StationList', $stationList );
 
@@ -145,8 +143,6 @@ sub addStationToWOTR {
 sub _addStationCLI {
 	my $request = shift;
 	my $client = $request->client;
-
-	main::DEBUGLOG && $log->is_debug && $log->debug(Dumper($request));
 
 	# check this is the correct command.
 	if ($request->isNotCommand([['radiofavourites'], ['addStation']])) {
@@ -214,7 +210,7 @@ sub _addStationCLI {
 sub addHandler{
 	my $handler = shift;
 
-	#handlerFunctionkey	
+	#handlerFunctionkey
 	#handlerSub
 
 	push @$handlerList, $handler;
