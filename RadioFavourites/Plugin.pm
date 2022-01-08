@@ -52,7 +52,7 @@ sub initPlugin {
 
 	$prefs->init(
 		{
-			is_radio => 0
+			is_radio => 1
 		}
 	);
 
@@ -63,6 +63,14 @@ sub initPlugin {
 		menu   => 'radios',
 		is_app => $class->can('nonSNApps') && (!($prefs->get('is_radio'))) ? 1 : undef,
 		weight => 1,
+	);
+
+	# make sure the value is defined, otherwise it would be enabled again
+	$prefs->setChange(
+		sub {
+			$prefs->set($_[0], 0) unless defined $_[1];
+		},
+		'pref_is_radio'
 	);
 
 	if ( !$::noweb ) {
@@ -154,7 +162,7 @@ sub _addStationCLI {
 
 		push @$items,
 		  {
-			text => string('PLUGIN_RADIO_FAVOURITES_ADD_STATION'),
+			text => string('PLUGIN_RADIOFAVOURITES_ADD_STATION'),
 			actions => {
 				go => {
 					player => 0,
@@ -187,7 +195,7 @@ sub _addStationCLI {
 					handlerFunctionKey =>  $request->getParam('handlerFunctionKey')
 				}
 			);
-			my $result = string('PLUGIN_RADIO_FAVOURITES_STATION_ADDED');
+			my $result = string('PLUGIN_RADIOFAVOURITES_STATION_ADDED');
 			$request->addResult($result);
 			$client->showBriefly(
 				{

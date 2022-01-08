@@ -37,7 +37,7 @@ sub init {
 
 	$folderList = $prefs->get('Radio_Favourites_FolderList');
 	Slim::Control::Request::addDispatch(['radiofavourites','addStation'],[0, 0, 1, \&Plugins::RadioFavourites::Plugin::_addStationCLI]);
-	Slim::Control::Request::addDispatch(['radiofavourites','folders'],[0, 0, 1, \&_foldersCLI]);
+	Slim::Control::Request::addDispatch(['radiofavourites','manage'],[0, 0, 1, \&_manageCLI]);
 	return;
 }
 
@@ -68,8 +68,8 @@ sub stationlist {
 				items => [],
 				itemActions => {
 					info => {
-						command     => ['radiofavourites', 'folders'],
-						fixedParams => { act => 'delete', folder => $folder },
+						command     => ['radiofavourites', 'manage'],
+						fixedParams => { act => 'deletefolder', folder => $folder },
 					},
 				}
 			  };
@@ -81,7 +81,7 @@ sub stationlist {
 
 	if ($stationCount == 0) {
 		main::DEBUGLOG && $log->is_debug && $log->debug("No Stations");
-		$callback->( { items => {name=> string('PLUGIN_RADIO_FAVOURITES_NOSTATIONS_MESSAGE'), type=>'text'} } );
+		$callback->( { items => [{name=> string('PLUGIN_RADIOFAVOURITES_NOSTATIONS_MESSAGE'), type=>'text'}] } );
 		return;
 	}
 
@@ -107,18 +107,16 @@ sub stationlist {
 						type        => 'audio',
 						line2       =>  $startTime . ' to ' . $endTime . ' ' . $result->{description},
 						image       => $result->{image},
+						itemActions => {
+							info => {
+								command     => ['radiofavourites', 'manage'],
+								fixedParams => { stationUrl => $result->{url}, stationItem => $i++ }
+							}
+						},
 						url         => $result->{url},
 						on_select   => 'play'
 					};
 
-					if (scalar @$folderList){
-						$item->{itemActions} = {
-							info => {
-								command     => ['radiofavourites', 'folders'],
-								fixedParams => { stationItem => $i++ },
-							},
-						};
-					}
 
 					if (!placeItemInFolder($folderMenu,$item)) {
 						push @$menu, $item;
@@ -136,10 +134,16 @@ sub stationlist {
 				sub {  ## failure
 					my $result = shift;
 					$log->warn('Failed to retrieve station now on data');
-					my $item ={
+					my $item = {
 						name        => $result->{stationName},
 						type        => 'audio',
-						artist      => string('PLUGIN_RADIO_FAVOURITES_NONOWPLAYINGAVAILABLE'),
+						artist      => string('PLUGIN_RADIOFAVOURITES_NONOWPLAYINGAVAILABLE'),
+						itemActions => {
+							info => {
+								command     => ['radiofavourites', 'manage'],
+								fixedParams => { stationUrl => $result->{url}, stationItem => $i++ }
+							}
+						},
 						url         => $result->{url},
 						on_select   => 'play'
 					};
@@ -157,6 +161,35 @@ sub stationlist {
 					}
 				}
 			);
+		} else {
+
+			$log->warn("No Function key for station, has the plugin been uninstalled");
+			my $item = {
+				name        => $station->{stationName},
+				type        => 'audio',
+				artist      => string('PLUGIN_RADIOFAVOURITES_NONOWPLAYINGAVAILABLE'),
+				itemActions => {
+					info => {
+						command     => ['radiofavourites', 'manage'],
+						fixedParams => { stationUrl => $station->{url}, stationItem => $i++ }
+					}
+				},
+				url         => $station->{url},
+				on_select   => 'play'
+			};
+
+			if (!placeItemInFolder($folderMenu,$item)) {
+				push @$menu, $item;
+			}
+
+			$stationCounter++;
+			main::DEBUGLOG && $log->is_debug && $log->debug("Fail $stationCounter $stationCount");
+			if ($stationCounter >= $stationCount) {
+				arrangeMenus($menu, $folderMenu);
+				$callback->( { items => $menu } );
+
+			}
+
 		}
 	}
 	return;
@@ -183,7 +216,7 @@ sub createFolderMenu {
 
 	push @$menu,
 	  {
-		name => string('PLUGIN_RADIO_FAVOURITES_CREATE_FOLDER'),
+		name => string('PLUGIN_RADIOFAVOURITES_CREATE_FOLDER'),
 		type => 'search',
 		url =>  \&createFolder,
 		nextWindow => 'parent'
@@ -206,7 +239,7 @@ sub createFolder {
 	$prefs->set( 'Radio_Favourites_FolderList', $folderList );
 	my $replMenu = {
 		type        => 'text',
-		name        => string('PLUGIN_RADIO_FAVOURITES_FOLDER_CREATED'),
+		name        => string('PLUGIN_RADIOFAVOURITES_FOLDER_CREATED'),
 		showBriefly => 1,
 		popback     => 1,
 		refresh     => 1,
@@ -245,12 +278,12 @@ sub getFunctionFromKey {
 }
 
 
-sub _foldersCLI {
+sub _manageCLI {
 	my $request = shift;
 	my $client = $request->client;
 
 	# check this is the correct command.
-	if ($request->isNotCommand([['radiofavourites'], ['folders']])) {
+	if ($request->isNotCommand([['radiofavourites'], ['manage']])) {
 		$request->setStatusBadDispatch();
 		return;
 	}
@@ -261,11 +294,11 @@ sub _foldersCLI {
 		for my $folder (@$folderList) {
 			push @$items,
 			  {
-				text => string('PLUGIN_RADIO_FAVOURITES_MOVE_TO') . ' ' . $folder . ' ' . string('PLUGIN_RADIO_FAVOURITES_FOLDER'),
+				text => string('PLUGIN_RADIOFAVOURITES_MOVE_TO') . ' ' . $folder . ' ' . string('PLUGIN_RADIOFAVOURITES_FOLDER'),
 				actions => {
 					go => {
 						player => 0,
-						cmd    => ['radiofavourites', 'folders' ],
+						cmd    => ['radiofavourites', 'manage' ],
 						params => {
 							move => $request->getParam('stationItem'),
 							folder =>  $folder
@@ -274,8 +307,23 @@ sub _foldersCLI {
 				},
 				nextWindow => 'parent',
 			  };
-
 		}
+		push @$items,
+		  {
+			text => string('PLUGIN_RADIOFAVOURITES_DELETE_STATION'),
+			actions => {
+				go => {
+					player => 0,
+					cmd    => ['radiofavourites', 'manage' ],
+					params => {
+						act =>'confirmdeletestation',
+						stationUrl =>  $request->getParam('stationUrl')
+					},
+				},
+			},
+			nextWindow => 'parent',
+		  };
+
 		$request->addResult('offset', 0);
 		$request->addResult('count', scalar @$items);
 		$request->addResult('item_loop', $items);
@@ -285,16 +333,16 @@ sub _foldersCLI {
 		Plugins::RadioFavourites::Plugin::setStationList($stationList);
 		$prefs->set( 'Radio_Favourites_StationList', $stationList );
 	} elsif (defined $request->getParam('act')) {
-		if ($request->getParam('act') eq 'delete') {
+		if ($request->getParam('act') eq 'deletefolder') {
 			push @$items,
 			  {
-				text => string('PLUGIN_RADIO_FAVOURITES_DELETE_FOLDER'),
+				text => string('PLUGIN_RADIOFAVOURITES_DELETE_FOLDER'),
 				actions => {
 					go => {
 						player => 0,
-						cmd    => ['radiofavourites', 'folders' ],
+						cmd    => ['radiofavourites', 'manage' ],
 						params => {
-							act =>'confirmdelete',
+							act =>'confirmdeletefolder',
 							folder =>  $request->getParam('folder')
 						},
 					},
@@ -304,11 +352,23 @@ sub _foldersCLI {
 			$request->addResult('offset', 0);
 			$request->addResult('count', scalar @$items);
 			$request->addResult('item_loop', $items);
-		} elsif ($request->getParam('act') eq 'confirmdelete') {
+		} elsif ($request->getParam('act') eq 'confirmdeletefolder') {
 			my $i = 0;
 			for my $folder (@$folderList) {
 				if ($folder eq $request->getParam('folder')) {
 					splice @$folderList, $i, 1;
+					$prefs->set( 'Radio_Favourites_FolderList', $folderList );
+				}
+				$i++;
+			}
+		} elsif ($request->getParam('act') eq 'confirmdeletestation') {
+			my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
+			my $i = 0;
+			for my $station (@$stationList) {
+				if ($station->{url} eq $request->getParam('stationUrl')) {
+					splice @$stationList, $i, 1;
+					$prefs->set('Radio_Favourites_StationList', []);
+					Plugins::RadioFavourites::Plugin::setStationList($stationList);
 				}
 				$i++;
 			}
