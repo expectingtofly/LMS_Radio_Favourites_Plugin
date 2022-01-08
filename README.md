@@ -4,7 +4,7 @@ The Radio Favourites Plugin allows to organise your live radio stations in a pla
 ![Radio Favourites Main](Images/MainFavouritesList.png)
 
 The plugin is available to install from the 3rd party plugins list on your Logitech Media Server installation.
-Once installed it is, by default installed into your "Radio" folder.
+Once installed it is, by default, installed into your "Radio" folder.
 
 ## How does it work?
 ### Adding a station
