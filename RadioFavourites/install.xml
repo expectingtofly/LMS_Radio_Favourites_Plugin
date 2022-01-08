@@ -2,10 +2,10 @@
 <extension>
 	<name>PLUGIN_RADIOFAVOURITES</name>
 	<module>Plugins::RadioFavourites::Plugin</module>	        
-	<version>0.0.80</version>
+	<version>0.0.82</version>
 	<description>PLUGIN_RADIOFAVOURITES_DESC</description>
 	<creator>ExpectingToFly</creator>	
-	<homepageURL>https://github.com/expectingtofly/LMS_Whats_On_The_Radio_Plugin</homepageURL>
+	<homepageURL>https://github.com/expectingtofly/LMS_Radio_Favourites_Plugin</homepageURL>
 	<icon>plugins/RadioFavourites/html/images/RadioFavourites_svg.png</icon>
 	<defaultState>enabled</defaultState>
 	<targetApplication>

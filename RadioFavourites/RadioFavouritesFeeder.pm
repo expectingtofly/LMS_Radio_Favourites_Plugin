@@ -219,7 +219,7 @@ sub createFolderMenu {
 		name => string('PLUGIN_RADIOFAVOURITES_CREATE_FOLDER'),
 		type => 'search',
 		url =>  \&createFolder,
-		nextWindow => 'parent'
+		nextWindow => 'refresh'
 	  };
 	return;
 }
