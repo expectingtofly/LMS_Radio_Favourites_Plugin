@@ -1,4 +1,4 @@
-package Plugins::WhatsOnTheRadio::Plugin;
+package Plugins::RadioFavourites::Plugin;
 
 # Copyright (C) 2021 Stuart McLean stu@expectingtofly.co.uk
 
@@ -29,22 +29,22 @@ use Slim::Utils::Prefs;
 
 use Data::Dumper;
 
-use Plugins::WhatsOnTheRadio::WhatsOnTheRadioFeeder;
+use Plugins::RadioFavourites::RadioFavouritesFeeder;
 
 my $log = Slim::Utils::Log->addLogCategory(
 	{
-		'category'     => 'plugin.whatsontheradio',
+		'category'     => 'plugin.RadioFavourites',
 		'defaultLevel' => 'DEBUG',
 		'description'  => getDisplayName(),
 	}
 );
 
-my $prefs = preferences('plugin.whatsontheradio');
+my $prefs = preferences('plugin.RadioFavourites');
 
-my $stationList = $prefs->get('WOTR_StationList');
+my $stationList = $prefs->get('Radio_Favourites_StationList');
 my $handlerList = [];
 
-Slim::Control::Request::addDispatch(['wotr','addStation'],[0, 0, 1, \&_addStationCLI]);
+
 
 
 sub initPlugin {
@@ -52,30 +52,45 @@ sub initPlugin {
 
 	$prefs->init(
 		{
-			is_radio => 0
+			is_radio => 1
 		}
 	);
 
 
 	$class->SUPER::initPlugin(
-		feed   => \&Plugins::WhatsOnTheRadio::WhatsOnTheRadioFeeder::stationlist,
-		tag    => 'whatsontheradio',
+		feed   => \&Plugins::RadioFavourites::RadioFavouritesFeeder::stationlist,
+		tag    => 'RadioFavourites',
 		menu   => 'radios',
 		is_app => $class->can('nonSNApps') && (!($prefs->get('is_radio'))) ? 1 : undef,
 		weight => 1,
 	);
 
+	# make sure the value is defined, otherwise it would be enabled again
+	$prefs->setChange(
+		sub {
+			$prefs->set($_[0], 0) unless defined $_[1];
+		},
+		'pref_is_radio'
+	);
+
 	if ( !$::noweb ) {
-		require Plugins::WhatsOnTheRadio::Settings;
-		Plugins::WhatsOnTheRadio::Settings->new;
+		require Plugins::RadioFavourites::Settings;
+		Plugins::RadioFavourites::Settings->new;
 	}
 
 
 	return;
 }
 
+sub postinitPlugin {
+	
+	Plugins::RadioFavourites::RadioFavouritesFeeder::init();
 
-sub getDisplayName { return 'PLUGIN_WHATSONTHERADIO'; }
+	return;
+}
+
+
+sub getDisplayName { return 'PLUGIN_RADIOFAVOURITES'; }
 
 
 sub playerMenu {
@@ -111,13 +126,19 @@ sub addStationToWOTR {
 	#url
 	#handlerFunctionKey
 
-	main::DEBUGLOG && $log->is_debug && $log->debug("StationDetails : " . Dumper($stationDetails));
+	for my $station (@$stationList) {
+		if ($station->{url} eq $stationDetails->{url}) {
+			$log->warn("Duplicate station, station not added");
+			return;
+		}
+	}
 
 	push @$stationList, $stationDetails;
 	main::DEBUGLOG && $log->is_debug && $log->debug("StationList : " . Dumper($stationList));	
 
-	$prefs->set( 'WOTR_StationList', $stationList );
+	$prefs->set( 'Radio_Favourites_StationList', $stationList );
 
+	return 1;
 }
 
 
@@ -128,7 +149,7 @@ sub _addStationCLI {
 	main::DEBUGLOG && $log->is_debug && $log->debug(Dumper($request));
 
 	# check this is the correct command.
-	if ($request->isNotCommand([['wotr'], ['addStation']])) {
+	if ($request->isNotCommand([['radiofavourites'], ['addStation']])) {
 		$request->setStatusBadDispatch();
 		return;
 	}
@@ -141,11 +162,11 @@ sub _addStationCLI {
 
 		push @$items,
 		  {
-			text => "Add to What's On The Radio",
+			text => string('PLUGIN_RADIOFAVOURITES_ADD_STATION'),
 			actions => {
 				go => {
 					player => 0,
-					cmd    => ['wotr', 'addStation' ],
+					cmd    => ['radiofavourites', 'addStation' ],
 					params => {
 						name =>  		$request->getParam('name'),
 						stationKey => 	$request->getParam('stationKey'),
@@ -174,11 +195,11 @@ sub _addStationCLI {
 					handlerFunctionKey =>  $request->getParam('handlerFunctionKey')
 				}
 			);
-			my $result = 'Station Added';
+			my $result = string('PLUGIN_RADIOFAVOURITES_STATION_ADDED');
 			$request->addResult($result);
 			$client->showBriefly(
 				{
-					line => [ $result, "What's on The Radio" ],
+					line => [ $result, string('PLUGIN_RADIOFAVOURITES') ],
 				}
 			);
 
