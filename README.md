@@ -11,7 +11,7 @@ Once installed it is, by default, installed into your "Radio" folder.
 To add a station to your Radio Favourites list, select the station from a compatible radio plugin (see list below for compatible plugins).  You will be able to add the station by selecting the "info" menu on the station menu option.  This is supported by all controllers.  Here is the example on "Orange Squeeze" Controller.  You press the 3 dots to bring up the option :
 ![Add Favourite](Images/OSAddFavourite.png)
 
-Using the "Material Skin" controller is similar, select the "more" menu on the info menu to access the option to add the station.
+Using the "Material Skin" controller is similar, select the "more" menu on the info menu to access the option to add the station.  On Jive/SqueezePlay type interfaces, long press on the station to get to the "Add to Radio Favourites" option.
 
 You can remove a station from your Radio Favourites by selecting info menu on the station station in your Radio Favourites folder.
 
