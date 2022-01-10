@@ -91,8 +91,8 @@ sub stationlist {
 				'now',
 				sub {  ## success
 					my $result = shift;					
-					my $startTime =  strftime( '%H:%M ', localtime($result->{startTime}) );
-					my $endTime =  strftime( '%H:%M ', localtime($result->{endTime}) );
+					my $startTime =  strftime( '%H:%M', localtime($result->{startTime}) );
+					my $endTime =  strftime( '%H:%M', localtime($result->{endTime}) );
 					my $item = {
 						name        => $result->{stationName} . ' - ' .  $result->{title},
 						type        => 'audio',
