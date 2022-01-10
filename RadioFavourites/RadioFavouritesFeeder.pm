@@ -23,12 +23,15 @@ use strict;
 use Slim::Utils::Strings qw(string);
 use Slim::Utils::Log;
 use Slim::Utils::Prefs;
+use Slim::Utils::Cache;
 
 use Data::Dumper;
 use POSIX qw(strftime);
+use Digest::MD5 qw(md5_hex);
 
 my $log = logger('plugin.RadioFavourites');
 my $prefs = preferences('plugin.RadioFavourites');
+my $cache = Slim::Utils::Cache->new();
 
 my $folderList = [];
 
@@ -55,7 +58,7 @@ sub stationlist {
 	my $stationCounter = 0;
 
 	my $menu = [];
-	my $folderMenu = [];	
+	my $folderMenu = [];
 
 	if ($folderList) {
 		for my $folder (@$folderList) {
@@ -82,105 +85,113 @@ sub stationlist {
 
 	main::DEBUGLOG && $log->is_debug && $log->debug("Stations : $stationCount");
 	my $i = 0;
-	for my $station (@$stationList) {		
-		if (my $function = getFunctionFromKey($station->{handlerFunctionKey})) {
-			$function->(
-				$station->{url},
-				$station->{stationKey},
-				$station->{name},
-				'now',
-				sub {  ## success
-					my $result = shift;					
-					my $startTime =  strftime( '%H:%M', localtime($result->{startTime}) );
-					my $endTime =  strftime( '%H:%M', localtime($result->{endTime}) );
-					my $item = {
-						name        => $result->{stationName} . ' - ' .  $result->{title},
-						type        => 'audio',
-						line2       =>  $startTime . ' to ' . $endTime . ' ' . $result->{description},
-						image       => $result->{image},
-						itemActions => {
-							info => {
-								command     => ['radiofavourites', 'manage'],
-								fixedParams => { stationUrl => $result->{url}, stationItem => $i++ }
-							}
-						},
-						url         => $result->{url},
-						on_select   => 'play'
-					};
-
-
-					if (!placeItemInFolder($folderMenu,$item)) {
-						push @$menu, $item;
-					}
-					$stationCounter++;
-					main::DEBUGLOG && $log->is_debug && $log->debug("Station Programme Collection : $stationCounter $stationCount");
-
-					if ($stationCounter >= $stationCount) {
-						main::DEBUGLOG && $log->is_debug && $log->debug("Complete station collection");
-						@$menu = sort { $a->{name} cmp $b->{name} } @$menu;
-						arrangeMenus($menu, $folderMenu);
-						$callback->( { items => $menu } );
-					}
-				},
-				sub {  ## failure
-					my $result = shift;
-					$log->warn('Failed to retrieve station now on data');
-					my $item = {
-						name        => $result->{stationName},
-						type        => 'audio',
-						artist      => string('PLUGIN_RADIOFAVOURITES_NONOWPLAYINGAVAILABLE'),
-						itemActions => {
-							info => {
-								command     => ['radiofavourites', 'manage'],
-								fixedParams => { stationUrl => $result->{url}, stationItem => $i++ }
-							}
-						},
-						url         => $result->{url},
-						on_select   => 'play'
-					};
-
-					if (!placeItemInFolder($folderMenu,$item)) {
-						push @$menu, $item;
-					}
-
-					$stationCounter++;
-					main::DEBUGLOG && $log->is_debug && $log->debug("Fail Station Collection $stationCounter $stationCount");
-					if ($stationCounter >= $stationCount) {
-						arrangeMenus($menu, $folderMenu);
-						$callback->( { items => $menu } );
-
-					}
-				}
-			);
-		} else {
-
-			$log->warn("No Function key for station, has the plugin been uninstalled");
-			my $item = {
-				name        => $station->{stationName},
-				type        => 'audio',
-				artist      => string('PLUGIN_RADIOFAVOURITES_NONOWPLAYINGAVAILABLE'),
-				itemActions => {
-					info => {
-						command     => ['radiofavourites', 'manage'],
-						fixedParams => { stationUrl => $station->{url}, stationItem => $i++ }
-					}
-				},
-				url         => $station->{url},
-				on_select   => 'play'
-			};
-
+	for my $station (@$stationList) {
+		if ( my $item = _getCachedItem($station->{url}) ) {
+			$stationCounter++;
 			if (!placeItemInFolder($folderMenu,$item)) {
 				push @$menu, $item;
 			}
-
-			$stationCounter++;
-			main::DEBUGLOG && $log->is_debug && $log->debug("Fail Station collection No Function key $stationCounter $stationCount");
 			if ($stationCounter >= $stationCount) {
-				arrangeMenus($menu, $folderMenu);
-				$callback->( { items => $menu } );
+				completeStationCollection($menu, $folderMenu,$callback);
+			}
+		} else {
+
+			if (my $function = getFunctionFromKey($station->{handlerFunctionKey})) {
+				$function->(
+					$station->{url},
+					$station->{stationKey},
+					$station->{name},
+					'now',
+					sub {  ## success
+						my $result = shift;
+						my $startTime =  strftime( '%H:%M', localtime($result->{startTime}) );
+						my $endTime =  strftime( '%H:%M', localtime($result->{endTime}) );
+						my $item = {
+							name        => $result->{stationName} . ' - ' .  $result->{title},
+							type        => 'audio',
+							line2       =>  $startTime . ' to ' . $endTime . ' ' . $result->{description},
+							image       => $result->{image},
+							itemActions => {
+								info => {
+									command     => ['radiofavourites', 'manage'],
+									fixedParams => { stationUrl => $result->{url}, stationItem => $i++ }
+								}
+							},
+							url         => $result->{url},
+							on_select   => 'play'
+						};
+
+						if ($result->{endTime}) { #cache
+							_cacheItem($result->{url}, $item, ($result->{endTime} - time()));
+						}
+						if (!placeItemInFolder($folderMenu,$item)) {
+							push @$menu, $item;
+						}
+						$stationCounter++;
+						main::DEBUGLOG && $log->is_debug && $log->debug("Station Programme Collection : $stationCounter $stationCount");
+
+						if ($stationCounter >= $stationCount) {
+							completeStationCollection($menu, $folderMenu,$callback);
+						}
+					},
+					sub {  ## failure
+						my $result = shift;
+						$log->warn('Failed to retrieve station now on data');
+						my $item = {
+							name        => $result->{stationName},
+							type        => 'audio',
+							artist      => string('PLUGIN_RADIOFAVOURITES_NONOWPLAYINGAVAILABLE'),
+							itemActions => {
+								info => {
+									command     => ['radiofavourites', 'manage'],
+									fixedParams => { stationUrl => $result->{url}, stationItem => $i++ }
+								}
+							},
+							url         => $result->{url},
+							on_select   => 'play'
+						};
+
+						_cacheItem($result->{url}, $item, 120);
+						if (!placeItemInFolder($folderMenu,$item)) {
+							push @$menu, $item;
+						}
+
+						$stationCounter++;
+						main::DEBUGLOG && $log->is_debug && $log->debug("Fail Station Collection $stationCounter $stationCount");
+						if ($stationCounter >= $stationCount) {
+							completeStationCollection($menu, $folderMenu,$callback);
+						}
+					}
+				);
+			} else {
+
+				$log->warn("No Function key for station, has the plugin been uninstalled");
+				my $item = {
+					name        => $station->{stationName},
+					type        => 'audio',
+					artist      => string('PLUGIN_RADIOFAVOURITES_NONOWPLAYINGAVAILABLE'),
+					itemActions => {
+						info => {
+							command     => ['radiofavourites', 'manage'],
+							fixedParams => { stationUrl => $station->{url}, stationItem => $i++ }
+						}
+					},
+					url         => $station->{url},
+					on_select   => 'play'
+				};
+
+				_cacheItem($station->{url}, $item, 120);
+				if (!placeItemInFolder($folderMenu,$item)) {
+					push @$menu, $item;
+				}
+
+				$stationCounter++;
+				main::DEBUGLOG && $log->is_debug && $log->debug("Fail Station collection No Function key $stationCounter $stationCount");
+				if ($stationCounter >= $stationCount) {
+					completeStationCollection($menu, $folderMenu,$callback);
+				}
 
 			}
-
 		}
 	}
 	return;
@@ -196,7 +207,7 @@ sub arrangeMenus{
 	unshift @$menu, @$folderMenu;
 
 	createFolderMenu($menu);
-	
+
 	return;
 }
 
@@ -216,7 +227,7 @@ sub createFolderMenu {
 
 
 sub createFolder {
-	my ( $client, $callback, $args, $passDict ) = @_;	
+	my ( $client, $callback, $args, $passDict ) = @_;
 
 	my $folder = $args->{'search'};
 
@@ -242,7 +253,7 @@ sub createFolder {
 
 sub setFolderList {
 	my $list = shift;
-	$folderList = $list;	
+	$folderList = $list;
 }
 
 
@@ -388,6 +399,46 @@ sub placeItemInFolder {
 		}
 	}
 	return;
+}
+
+
+sub completeStationCollection {
+	my ( $menu, $folderMenu, $callback ) = @_;
+	main::DEBUGLOG && $log->is_debug && $log->debug("Complete station collection");
+	@$menu = sort { $a->{name} cmp $b->{name} } @$menu;
+	arrangeMenus($menu, $folderMenu);
+	$callback->( { items => $menu } );
+}
+
+
+sub _cacheItem {
+	my $url  = shift;
+	my $item = shift;
+	my $seconds = shift;
+	main::DEBUGLOG && $log->is_debug && $log->debug("++_cacheMenu");
+	my $cacheKey = 'RF:' . md5_hex($url);
+
+	$cache->set( $cacheKey, \$item, $seconds );
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("--_cacheMenu");
+	return;
+}
+
+
+sub _getCachedItem {
+	my $url = shift;
+	main::DEBUGLOG && $log->is_debug && $log->debug("++_getCachedMenu");
+
+	my $cacheKey = 'RF:' . md5_hex($url);
+
+	if ( my $cachedMenu = $cache->get($cacheKey) ) {
+		my $item = ${$cachedMenu};
+		main::DEBUGLOG && $log->is_debug && $log->debug("--_getCachedMenu got cached menu");
+		return $item;
+	}else {
+		main::DEBUGLOG && $log->is_debug && $log->debug("--_getCachedMenu no cache");
+		return;
+	}
 }
 
 1;
