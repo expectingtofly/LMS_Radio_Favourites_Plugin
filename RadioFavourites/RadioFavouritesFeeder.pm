@@ -41,6 +41,8 @@ sub init {
 	$folderList = $prefs->get('Radio_Favourites_FolderList');
 	Slim::Control::Request::addDispatch(['radiofavourites','addStation'],[0, 0, 1, \&Plugins::RadioFavourites::Plugin::_addStationCLI]);
 	Slim::Control::Request::addDispatch(['radiofavourites','manage'],[0, 0, 1, \&_manageCLI]);
+
+	_flushStationCache();  # clear the cache on reboot.
 	return;
 }
 
@@ -439,6 +441,20 @@ sub _getCachedItem {
 		main::DEBUGLOG && $log->is_debug && $log->debug("--_getCachedMenu no cache");
 		return;
 	}
+}
+
+sub _flushStationCache {
+	my $url  = shift;
+	main::DEBUGLOG && $log->is_debug && $log->debug("++_removeCacheMenu");
+	my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
+
+	for my $station (@$stationList) {
+		my $cacheKey = 'RF:' . md5_hex($station->{url});
+		$cache->remove($cacheKey);
+	}
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("--_removeCacheMenu");
+	return;
 }
 
 1;

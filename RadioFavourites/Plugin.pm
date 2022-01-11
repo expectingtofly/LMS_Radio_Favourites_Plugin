@@ -41,7 +41,7 @@ my $log = Slim::Utils::Log->addLogCategory(
 
 my $prefs = preferences('plugin.RadioFavourites');
 
-my $stationList = $prefs->get('Radio_Favourites_StationList');
+my $stationList = [];
 my $handlerList = [];
 
 
@@ -82,6 +82,8 @@ sub initPlugin {
 
 
 sub postinitPlugin {
+
+	$stationList = $prefs->get('Radio_Favourites_StationList');
 
 	Plugins::RadioFavourites::RadioFavouritesFeeder::init();
 
