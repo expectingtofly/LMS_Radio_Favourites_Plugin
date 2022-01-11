@@ -449,7 +449,7 @@ sub _flushStationCache {
 	my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
 
 	for my $station (@$stationList) {
-		my $cacheKey = 'rf:' . md5_hex($station->{url});
+		my $cacheKey = 'RF:' . md5_hex($station->{url});
 		$cache->remove($cacheKey);
 	}
 
