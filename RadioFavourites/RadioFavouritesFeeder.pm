@@ -366,7 +366,7 @@ sub _manageCLI {
 			for my $station (@$stationList) {
 				if ($station->{url} eq $request->getParam('stationUrl')) {
 					splice @$stationList, $i, 1;
-					$prefs->set('Radio_Favourites_StationList', []);
+					$prefs->set('Radio_Favourites_StationList', $stationList);
 					Plugins::RadioFavourites::Plugin::setStationList($stationList);
 				}
 				$i++;
