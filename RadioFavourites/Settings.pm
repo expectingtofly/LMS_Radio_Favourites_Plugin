@@ -31,7 +31,7 @@ sub handler {
 			$prefs->set('Radio_Favourites_StationList', []);
 			Plugins::RadioFavourites::Plugin::setStationList([]);
 		}
-		if ($params->{clearFavouriteStations}) {
+		if ($params->{deleteAllFolders}) {
 			$prefs->set('Radio_Favourites_FolderList', []);
 			Plugins::RadioFavourites::RadioFavouritesFeeder::setFolderList([]);
 		}
