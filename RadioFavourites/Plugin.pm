@@ -30,6 +30,8 @@ use Slim::Utils::Prefs;
 use Data::Dumper;
 
 use Plugins::RadioFavourites::RadioFavouritesFeeder;
+use Plugins::RadioFavourites::FolderProtocolHandler;
+
 
 my $log = Slim::Utils::Log->addLogCategory(
 	{

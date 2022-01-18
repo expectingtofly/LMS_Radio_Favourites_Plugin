@@ -62,8 +62,9 @@ sub stationlist {
 	my $folderMenu = [];
 
 	if ($folderList) {
+		my $supportsFavs = ($main::VERSION ge '8.2.0');
 		for my $folder (@$folderList) {
-			push @$folderMenu,
+			my $item =
 			  {
 				name => $folder,
 				type => 'link',
@@ -76,6 +77,16 @@ sub stationlist {
 					},
 				}
 			  };
+			
+			if ($supportsFavs) { 
+				main::DEBUGLOG && $log->is_debug && $log->debug("Adding favourite urls");
+				$item->{favorites_url} = 'radfavfolder://'.$folder;				
+				$item->{favorites_type}	= 'link';
+				$item->{playlist} = 'radfavfolder://'.$folder;	
+			}
+			
+			push @$folderMenu,$item
+
 		}
 	}
 
@@ -138,8 +149,10 @@ sub getStationsForFolder {
 				push @$subStationList, $station;
 			}
 		} else {
-			if ($station->{folder} eq $folder) {
-				push @$subStationList, $station;
+			if ($station->{folder}) {
+				if ($station->{folder} eq $folder) {
+					push @$subStationList, $station;
+				}
 			}
 		}
 	}
@@ -391,7 +404,6 @@ sub _manageCLI {
 		$request->addResult('item_loop', $items);
 	} elsif (defined $request->getParam('move')) {
 		my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
-		@$stationList[$request->getParam('move')]->{folder} = $request->getParam('folder');
 		for my $station (@$stationList) {
 			if ($station->{url} eq $request->getParam('move')) {
 				$station->{folder} = $request->getParam('folder');
