@@ -29,7 +29,7 @@ use Data::Dumper;
 use POSIX qw(strftime);
 use Digest::MD5 qw(md5_hex);
 
-my $log = logger('plugin.RadioFavourites');
+my $log = logger('plugin.radiofavourites');
 my $prefs = preferences('plugin.RadioFavourites');
 my $cache = Slim::Utils::Cache->new();
 
@@ -57,7 +57,6 @@ sub stationlist {
 	if ($stationList) {
 		$stationCount = scalar @$stationList;
 	}
-	my $stationCounter = 0;
 
 	my $menu = [];
 	my $folderMenu = [];
@@ -68,7 +67,8 @@ sub stationlist {
 			  {
 				name => $folder,
 				type => 'link',
-				items => [],
+				url => \&folderStationList,
+				passthrough => [ { folder => $folder } ],
 				itemActions => {
 					info => {
 						command     => ['radiofavourites', 'manage'],
@@ -85,16 +85,84 @@ sub stationlist {
 		return;
 	}
 
+	getStationsForFolder($stationList, 1, '', $menu, sub { completeStationCollection($menu, $folderMenu, $callback); });
+
+	return;
+}
+
+
+sub folderStationList {
+	my ( $client, $callback, $args, $passDict ) = @_;
+
+	my $folder = $passDict->{'folder'};
+
+	my $menu = [];
+	my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
+
+	getStationsForFolder(
+		$stationList,
+		0, $folder, $menu,
+		sub {
+			@$menu = sort { $a->{name} cmp $b->{name} } @$menu;
+			$callback->({items => $menu});
+		}
+	);
+
+	return;
+}
+
+
+sub isFolder {
+	my $folder = shift;
+
+	if ($folder) {
+		for my $realFolder (@$folderList) {
+			if ($folder eq $realFolder ) {
+				return 1;
+			}
+		}
+	}
+	return;
+}
+
+
+sub getStationsForFolder {
+	my ( $allStations, $isTop, $folder, $menu, $completionCallback ) = @_;
+
+	#Get only those stations that are for this folder
+	my $subStationList = [];
+
+	for my $station (@$allStations) {
+		if ($isTop) {
+			if (!(isFolder($station->{folder})) ) {
+				push @$subStationList, $station;
+			}
+		} else {
+			if ($station->{folder} eq $folder) {
+				push @$subStationList, $station;
+			}
+		}
+	}
+
+
+	my $stationCount = scalar @$subStationList;
+	my $stationCounter = 0;
+
+	if ($stationCount == 0) {
+		main::DEBUGLOG && $log->is_debug && $log->debug("No Stations");
+		$completionCallback->();
+		return;
+	}
+
 	main::DEBUGLOG && $log->is_debug && $log->debug("Stations : $stationCount");
+
 	my $i = 0;
-	for my $station (@$stationList) {
+	for my $station (@$subStationList) {
 		if ( my $item = _getCachedItem($station->{url}) ) {
 			$stationCounter++;
-			if (!placeItemInFolder($folderMenu,$item)) {
-				push @$menu, $item;
-			}
+			push @$menu, $item;
 			if ($stationCounter >= $stationCount) {
-				completeStationCollection($menu, $folderMenu,$callback);
+				$completionCallback->();
 			}
 		} else {
 
@@ -126,14 +194,14 @@ sub stationlist {
 						if ($result->{endTime}) { #cache
 							_cacheItem($result->{url}, $item, ($result->{endTime} - time()));
 						}
-						if (!placeItemInFolder($folderMenu,$item)) {
-							push @$menu, $item;
-						}
+
+						push @$menu, $item;
+
 						$stationCounter++;
 						main::DEBUGLOG && $log->is_debug && $log->debug("Station Programme Collection : $stationCounter $stationCount");
 
 						if ($stationCounter >= $stationCount) {
-							completeStationCollection($menu, $folderMenu,$callback);
+							$completionCallback->();
 						}
 					},
 					sub {  ## failure
@@ -154,14 +222,13 @@ sub stationlist {
 						};
 
 						_cacheItem($result->{url}, $item, 120);
-						if (!placeItemInFolder($folderMenu,$item)) {
-							push @$menu, $item;
-						}
+
+						push @$menu, $item;
 
 						$stationCounter++;
 						main::DEBUGLOG && $log->is_debug && $log->debug("Fail Station Collection $stationCounter $stationCount");
 						if ($stationCounter >= $stationCount) {
-							completeStationCollection($menu, $folderMenu,$callback);
+							$completionCallback->();
 						}
 					}
 				);
@@ -183,28 +250,24 @@ sub stationlist {
 				};
 
 				_cacheItem($station->{url}, $item, 120);
-				if (!placeItemInFolder($folderMenu,$item)) {
-					push @$menu, $item;
-				}
+
+				push @$menu, $item;
 
 				$stationCounter++;
 				main::DEBUGLOG && $log->is_debug && $log->debug("Fail Station collection No Function key $stationCounter $stationCount");
 				if ($stationCounter >= $stationCount) {
-					completeStationCollection($menu, $folderMenu,$callback);
+					$completionCallback->();
 				}
 
 			}
 		}
 	}
-	return;
 }
 
 
 sub arrangeMenus{
 	my $menu =shift;
 	my $folderMenu = shift;
-
-	@$menu = sort { $a->{name} cmp $b->{name} } @$menu;
 
 	unshift @$menu, @$folderMenu;
 
@@ -299,7 +362,7 @@ sub _manageCLI {
 						player => 0,
 						cmd    => ['radiofavourites', 'manage' ],
 						params => {
-							move => $request->getParam('stationItem'),
+							move => $request->getParam('stationUrl'),
 							folder =>  $folder
 						},
 					},
@@ -329,6 +392,11 @@ sub _manageCLI {
 	} elsif (defined $request->getParam('move')) {
 		my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
 		@$stationList[$request->getParam('move')]->{folder} = $request->getParam('folder');
+		for my $station (@$stationList) {
+			if ($station->{url} eq $request->getParam('move')) {
+				$station->{folder} = $request->getParam('folder');
+			}
+		}
 		Plugins::RadioFavourites::Plugin::setStationList($stationList);
 		$prefs->set( 'Radio_Favourites_StationList', $stationList );
 	} elsif (defined $request->getParam('act')) {
@@ -350,6 +418,7 @@ sub _manageCLI {
 			  };
 			$request->addResult('offset', 0);
 			$request->addResult('count', scalar @$items);
+
 			$request->addResult('item_loop', $items);
 		} elsif ($request->getParam('act') eq 'confirmdeletefolder') {
 			my $i = 0;
@@ -377,30 +446,6 @@ sub _manageCLI {
 	$request->setStatusDone;
 	return;
 
-}
-
-
-sub placeItemInFolder {
-	my $folderMenu = shift;
-	my $item = shift;
-
-	my $url = $item->{url};
-	my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
-
-	for my $station (@$stationList) {
-		if ($url eq $station->{url}) {
-			if (defined $station->{folder}) {
-				for my $folder (@$folderMenu) {
-					if ($folder->{name} eq $station->{folder}) {
-						my $items = $folder->{items};
-						push @$items, $item;
-						return 1;
-					}
-				}
-			}
-		}
-	}
-	return;
 }
 
 
@@ -442,6 +487,7 @@ sub _getCachedItem {
 		return;
 	}
 }
+
 
 sub _flushStationCache {
 	my $url  = shift;

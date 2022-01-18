@@ -33,7 +33,7 @@ use Plugins::RadioFavourites::RadioFavouritesFeeder;
 
 my $log = Slim::Utils::Log->addLogCategory(
 	{
-		'category'     => 'plugin.RadioFavourites',
+		'category'     => 'plugin.radiofavourites',
 		'defaultLevel' => 'WARN',
 		'description'  => getDisplayName(),
 	}
