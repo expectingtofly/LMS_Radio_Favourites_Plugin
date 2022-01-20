@@ -64,8 +64,7 @@ sub stationlist {
 	if ($folderList) {
 		my $supportsFavs = ($main::VERSION ge '8.2.0');
 		for my $folder (@$folderList) {
-			my $item =
-			  {
+			my $item ={
 				name => $folder,
 				type => 'link',
 				url => \&folderStationList,
@@ -76,16 +75,16 @@ sub stationlist {
 						fixedParams => { act => 'deletefolder', folder => $folder },
 					},
 				}
-			  };
-			
-			if ($supportsFavs) { 
+			};
+
+			if ($supportsFavs) {
 				main::DEBUGLOG && $log->is_debug && $log->debug("Adding favourite urls");
-				$item->{favorites_url} = 'radfavfolder://'.$folder;				
+				$item->{favorites_url} = 'radfavfolder://'.$folder;
 				$item->{favorites_type}	= 'link';
-				$item->{playlist} = 'radfavfolder://'.$folder;	
+				$item->{playlist} = 'radfavfolder://'.$folder;
 			}
-			
-			push @$folderMenu,$item
+
+			push @$folderMenu,$item;
 
 		}
 	}
@@ -365,8 +364,18 @@ sub _manageCLI {
 
 	my $items = [];
 
+	my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
 	if (defined $request->getParam('stationItem')) {
-		for my $folder (@$folderList) {
+		my $station; #identify the station;
+
+		for my $stat (@$stationList) {
+			if ($stat->{url} eq $request->getParam('stationUrl')) {
+				$station = $stat;
+				last;
+			}
+		}
+
+		for my $folder (@$folderList) {			
 			push @$items,
 			  {
 				text => string('PLUGIN_RADIOFAVOURITES_MOVE_TO') . ' ' . $folder . ' ' . string('PLUGIN_RADIOFAVOURITES_FOLDER'),
@@ -381,8 +390,25 @@ sub _manageCLI {
 					},
 				},
 				nextWindow => 'parent',
-			  };
+			  } if ($folder ne $station->{folder});
 		}
+
+		push @$items,{
+			text => string('PLUGIN_RADIOFAVOURITES_MOVE_TO_TOP'),
+			actions => {
+				go => {
+					player => 0,
+					cmd    => ['radiofavourites', 'manage' ],
+					params => {
+						move => $request->getParam('stationUrl'),
+						folder =>  undef
+					},
+				},
+			},
+			nextWindow => 'parent',
+		} if ($station->{folder});
+
+
 		push @$items,
 		  {
 			text => string('PLUGIN_RADIOFAVOURITES_DELETE_STATION'),
@@ -403,7 +429,6 @@ sub _manageCLI {
 		$request->addResult('count', scalar @$items);
 		$request->addResult('item_loop', $items);
 	} elsif (defined $request->getParam('move')) {
-		my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
 		for my $station (@$stationList) {
 			if ($station->{url} eq $request->getParam('move')) {
 				$station->{folder} = $request->getParam('folder');
@@ -442,13 +467,13 @@ sub _manageCLI {
 				$i++;
 			}
 		} elsif ($request->getParam('act') eq 'confirmdeletestation') {
-			my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
 			my $i = 0;
 			for my $station (@$stationList) {
 				if ($station->{url} eq $request->getParam('stationUrl')) {
 					splice @$stationList, $i, 1;
 					$prefs->set('Radio_Favourites_StationList', $stationList);
 					Plugins::RadioFavourites::Plugin::setStationList($stationList);
+					last;
 				}
 				$i++;
 			}
