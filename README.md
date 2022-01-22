@@ -41,6 +41,10 @@ The following are the Radio Plugins that support/compatible with the Radio Favou
 
 **Please Note a small number of stations on UK Radio don't provide the current programme information, in particular that includes Times Radio and Virgin Radio, so use the specific plugin to add those.
 
+## License
+The Radio Favourites plugin and all my LMS plugins, are completely free and open source, it has been developed for fun and my own use, with the hope it would be useful to others.  No donation is expected.   However, if you find it useful and would like to, you can buy me a coffee via the link below:
+
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X02V4LF)
 
 
 
