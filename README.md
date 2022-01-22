@@ -19,6 +19,18 @@ You can remove a station from your Radio Favourites by selecting info menu on th
 You can create folders to organise stations into groups.  Type the name of the folder in the "Create Folder" option to create the folder, then add stations to the folder by selecting the "info" menu on the station and selecting the folder.
 ![Folders](Images/folders.png)
 
+Folders can also be placed in the LMS standard Favourites folder, enabling you to have your Radio Favourites in the standard LMS Favourites folder.
+
+### Managing in the Preferences
+In your LMS Settings->Advanced->Radio Favourites there is a Radio Favourites Editor available to assist in managing your favourites.
+![Radio Favourites Editor](Images/RadioStationsEditor.png)
+From here, you can:
+* Edit the station name to your preferences
+* Delete a station
+* Set the folder for the station
+* Set a Customer URL.  If you have a different url for a station audio that you prefer (e.g. provides a higher bitrate to the one provided by the plugin) then this url will be played instead of the plugin url when selected
+* Delete a folder
+
 ## Compatible LMS Radio Plugins
 The following are the Radio Plugins that support/compatible with the Radio Favourites plugin.  Hopefully more to follow ...
 
