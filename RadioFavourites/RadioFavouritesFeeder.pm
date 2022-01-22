@@ -78,7 +78,6 @@ sub stationlist {
 			};
 
 			if ($supportsFavs) {
-				main::DEBUGLOG && $log->is_debug && $log->debug("Adding favourite urls");
 				$item->{favorites_url} = 'radfavfolder://'.$folder;
 				$item->{favorites_type}	= 'link';
 				$item->{playlist} = 'radfavfolder://'.$folder;
@@ -142,6 +141,8 @@ sub getStationsForFolder {
 	#Get only those stations that are for this folder
 	my $subStationList = [];
 
+	my %customUrlsHash;
+
 	for my $station (@$allStations) {
 		if ($isTop) {
 			if (!(isFolder($station->{folder})) ) {
@@ -153,6 +154,9 @@ sub getStationsForFolder {
 					push @$subStationList, $station;
 				}
 			}
+		}
+		if ($station->{customUrl}) {
+			$customUrlsHash{$station->{url}} = $station->{customUrl};
 		}
 	}
 
@@ -188,6 +192,13 @@ sub getStationsForFolder {
 						my $result = shift;
 						my $startTime =  strftime( '%H:%M', localtime($result->{startTime}) );
 						my $endTime =  strftime( '%H:%M', localtime($result->{endTime}) );
+
+						my $url = $result->{url};
+						if ($customUrlsHash{$url}) {
+							$url = $customUrlsHash{$url};
+						}
+
+
 						my $item = {
 							name        => $result->{stationName} . ' - ' .  $result->{title},
 							type        => 'audio',
@@ -199,7 +210,7 @@ sub getStationsForFolder {
 									fixedParams => { stationUrl => $result->{url}, stationItem => $i++ }
 								}
 							},
-							url         => $result->{url},
+							url         => $url,
 							on_select   => 'play'
 						};
 
@@ -334,6 +345,11 @@ sub setFolderList {
 }
 
 
+sub getFolderList {
+	return $folderList;
+}
+
+
 sub getFunctionFromKey {
 	my $key = shift;
 
@@ -375,7 +391,7 @@ sub _manageCLI {
 			}
 		}
 
-		for my $folder (@$folderList) {			
+		for my $folder (@$folderList) {
 			push @$items,
 			  {
 				text => string('PLUGIN_RADIOFAVOURITES_MOVE_TO') . ' ' . $folder . ' ' . string('PLUGIN_RADIOFAVOURITES_FOLDER'),
@@ -393,7 +409,8 @@ sub _manageCLI {
 			  } if ($folder ne $station->{folder});
 		}
 
-		push @$items,{
+		push @$items,
+		  {
 			text => string('PLUGIN_RADIOFAVOURITES_MOVE_TO_TOP'),
 			actions => {
 				go => {
@@ -406,7 +423,7 @@ sub _manageCLI {
 				},
 			},
 			nextWindow => 'parent',
-		} if ($station->{folder});
+		  } if ($station->{folder});
 
 
 		push @$items,
@@ -458,29 +475,55 @@ sub _manageCLI {
 
 			$request->addResult('item_loop', $items);
 		} elsif ($request->getParam('act') eq 'confirmdeletefolder') {
-			my $i = 0;
-			for my $folder (@$folderList) {
-				if ($folder eq $request->getParam('folder')) {
-					splice @$folderList, $i, 1;
-					$prefs->set( 'Radio_Favourites_FolderList', $folderList );
-				}
-				$i++;
-			}
+
+			deleteFolder($request->getParam('folder'));
+
 		} elsif ($request->getParam('act') eq 'confirmdeletestation') {
-			my $i = 0;
-			for my $station (@$stationList) {
-				if ($station->{url} eq $request->getParam('stationUrl')) {
-					splice @$stationList, $i, 1;
-					$prefs->set('Radio_Favourites_StationList', $stationList);
-					Plugins::RadioFavourites::Plugin::setStationList($stationList);
-					last;
-				}
-				$i++;
-			}
+
+			deleteStation($request->getParam('stationUrl'));
 		}
 	}
 
 	$request->setStatusDone;
+	return;
+
+}
+
+
+sub deleteFolder {
+	my $deleteFolder = shift;
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("Delete " . $deleteFolder );
+
+	my $i = 0;
+	for my $folder (@$folderList) {
+		if ($folder eq $deleteFolder) {
+			main::DEBUGLOG && $log->is_debug && $log->debug("Deleting " . $deleteFolder);
+			splice @$folderList, $i, 1;
+			$prefs->set( 'Radio_Favourites_FolderList', $folderList );
+		}
+		$i++;
+	}
+}
+
+
+sub deleteStation {
+	my $stationUrl = shift;
+
+	my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("Delete " . $stationUrl );
+	my $i = 0;
+	for my $station (@$stationList) {
+		if ($station->{url} eq $stationUrl) {
+			main::DEBUGLOG && $log->is_debug && $log->debug("Deleting " . $station->{url});
+			splice @$stationList, $i, 1;
+			$prefs->set('Radio_Favourites_StationList', $stationList);
+			Plugins::RadioFavourites::Plugin::setStationList($stationList);
+			last;
+		}
+		$i++;
+	}
 	return;
 
 }

@@ -1,5 +1,11 @@
 [% PROCESS settings/header.html %]
 
+[% WRAPPER setting title="PLUGIN_RADIOFAVOURITES_HELP" desc="" %]
+<p><a href="https://github.com/expectingtofly/LMS_Radio_Favourites_Plugin#readme" target="none">Click here for help with the Radio Favourites Plugin</a></p>
+<p><a href="https://github.com/expectingtofly/LMS_Radio_Favourites_Plugin/blob/main/CompatiblePlugins.md" target="none">Click here to see the list of compatible live radio plugins</a></p>	
+[% END %]
+
+
 
 [% WRAPPER setting title="PLUGIN_RADIOFAVOURITES_MENU_LOCATION" desc="" %]	
 <input name="pref_is_radio" type="checkbox" [% IF prefs.pref_is_radio %] checked [% END %]>
@@ -9,15 +15,44 @@
 <br/>
 
 [% WRAPPER setting title="PLUGIN_RADIOFAVOURITES_CLEAR_CONFIGURATION" desc="" %]	
-<input name="clearFavouriteStations" type="checkbox" >
+<input name="clearFavouriteStations" type="checkbox" />
 <label for="clearFavouriteStations">[% "PLUGIN_RADIOFAVOURITES_CLEAR_ALL_STATIONS" | string %]</label><br/>
-<input name="deleteAllFolders" type="checkbox" >
+<input name="deleteAllFolders" type="checkbox" />
 <label for="deleteAllFolders">[% "PLUGIN_RADIOFAVOURITES_CLEAR_ALL_FOLDERS" | string %]</label><br/>
 [% END %]
 
-[% WRAPPER setting title="PLUGIN_RADIOFAVOURITES_HELP" desc="" %]
-<p><a href="https://github.com/expectingtofly/LMS_Radio_Favourites_Plugin#readme" target="none">Click here for help with the Radio Favourites Plugin</a></p>
-<p><a href="https://github.com/expectingtofly/LMS_Radio_Favourites_Plugin/blob/main/CompatiblePlugins.md" target="none">Click here to see the list of compatible live radio plugins</a></p>	
+[% WRAPPER setting title="PLUGIN_RADIO_FAVOURITES_EDITOR" desc="" %]
+    <table>
+        <tr><th>[% "PLUGIN_RADIO_FAVOURITES_STATION_NAME" | string %][% "COLON" | string %]</th><th>URL[% "COLON" | string %]</th><th>Handler[% "COLON" | string %]</th><th>Custom URL[% "COLON" | string %]</th><th>[% "PLUGIN_RADIO_FAVOURITES_FOLDER" | string %][% "COLON" | string %]</th><th>[% "DELETE" | string %][% "COLON" | string %]</th></tr>
+        [% FOREACH fav = favourites %]
+        <tr>
+            <td><input class="table-cell" type="text" name="pref_station_name_[% loop.count %]" id="pref_station_name_[% loop.count %]" value="[% fav.name %]" size=10 /></td>
+            <td>[% fav.url %]</td>
+            <td>[% fav.handlerFunctionKey %]</td>				
+            <td><input class="table-cell" type="text" name="pref_custom_url_[% loop.count %]" id="pref_custom_url_[% loop.count %]" value="[% fav.customUrl %]" size=30 /></td>
+            <td><select class="stdedit" name="pref_folder_[% loop.count %]" style="margin-top:0">
+                <option [% IF !fav.folder ; "selected"; END %] value="topLevel">Top Level</option>
+                [% FOREACH fold = folders %]
+                <option [% IF fold == fav.folder ; "selected"; END %] value="[% fold %]">[% fold %]</option>
+                [% END %]                
+            </select></td>
+            <td><input name="pref_delete_favourite_[% loop.count %]" type="checkbox" /></td>		
+        </tr>
+        [% END %]        
+    </table>
+    [% IF hasFolders %]
+    <br/>
+    <table>
+        <tr><th>[% "PLUGIN_RADIO_FAVOURITES_FOLDER" | string %][% "COLON" | string %]</th><th>[% "DELETE" | string %][% "COLON" | string %]</th></tr>
+        [% FOREACH fold = folders %]
+        <tr>        
+            <td>[% fold %]</td>        
+            <td><input name="pref_delete_folder_[% fold %]" type="checkbox" /></td>		
+        </tr>
+        [% END %]        
+    </table>
+    [% END %]     
 [% END %]
+
 
 [% PROCESS settings/footer.html %]
