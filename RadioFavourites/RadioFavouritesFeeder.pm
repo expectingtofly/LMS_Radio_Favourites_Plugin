@@ -145,8 +145,12 @@ sub getStationsForFolder {
 
 	for my $station (@$allStations) {
 		if ($isTop) {
-			if (!(isFolder($station->{folder})) ) {
+			if($folder eq '__all__') {
 				push @$subStationList, $station;
+			} else {
+				if (!(isFolder($station->{folder})) ) {
+					push @$subStationList, $station;
+				}
 			}
 		} else {
 			if ($station->{folder}) {
@@ -204,6 +208,11 @@ sub getStationsForFolder {
 							type        => 'audio',
 							line2       =>  $startTime . ' to ' . $endTime . ' ' . $result->{description},
 							image       => $result->{image},
+							RFstartTime => $result->{startTime},
+							RFendTime => $result->{endTime},
+							RFstationName => $result->{stationName},
+							RFtitle => $result->{title},
+							RFdescription => $result->{description},							
 							itemActions => {
 								info => {
 									command     => ['radiofavourites', 'manage'],
@@ -287,6 +296,16 @@ sub getStationsForFolder {
 	}
 }
 
+
+sub getAllStations{
+	my ( $callback ) = @_;
+
+
+	my $menu = [];
+	my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
+	getStationsForFolder($stationList, 1, '__all__', $menu, sub { $callback->($menu); });
+
+}
 
 sub arrangeMenus{
 	my $menu =shift;
