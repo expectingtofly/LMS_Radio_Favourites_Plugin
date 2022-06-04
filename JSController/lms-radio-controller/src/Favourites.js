@@ -29,10 +29,6 @@ class Favourites extends React.Component {
         }
     }
 
-
-
-
-
     componentDidMount() {
         const playerId = this.props.playerID;
 

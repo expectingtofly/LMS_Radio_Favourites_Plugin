@@ -11,9 +11,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Menu from '@mui/material/Menu';
 import Button from '@mui/material/Button';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import RestoreIcon from '@mui/icons-material/Restore';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import ArchiveIcon from '@mui/icons-material/Archive';
 
+import Paper from '@mui/material/Paper';
+import BottomNavigation from '@mui/material/BottomNavigation';
+import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 
-import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -25,9 +30,9 @@ const _lib = require('./cometd');
 
 
 function PlayerSelect(props) {
-  const playerOptions = props.players.map((player,index) => {
-    return (<MenuItem onClick={(event) => handleMenuItemClick(event, index )} key={player.playerID}
-    selected={player.playerID === props.selectedPlayerID} value={player.playerID}>{player.name}</MenuItem>)
+  const playerOptions = props.players.map((player, index) => {
+    return (<MenuItem onClick={(event) => handleMenuItemClick(event, index)} key={player.playerID}
+      selected={player.playerID === props.selectedPlayerID} value={player.playerID}>{player.name}</MenuItem>)
   });
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [playerName, setPlayerName] = React.useState(null);
@@ -41,7 +46,7 @@ function PlayerSelect(props) {
 
   const handleClose = (event) => {
     console.log("It closed " + event);
-     setAnchorEl(null);
+    setAnchorEl(null);
     //props.onChange(event.target.value);
   };
 
@@ -63,8 +68,8 @@ function PlayerSelect(props) {
         onClick={handleClick}
         endIcon={<KeyboardArrowDownIcon />}
       >
-        {playerName?playerName:'Select Player'}
-      </Button>      
+        {playerName ? playerName : 'Select Player'}
+      </Button>
       <Menu
         id="player-select-menu"
         aria-labelledby="layer-select-button"
@@ -80,7 +85,7 @@ function PlayerSelect(props) {
           horizontal: 'left',
         }}
       >
-      {playerOptions}</Menu>
+        {playerOptions}</Menu>
     </div>
   );
 }
@@ -94,11 +99,11 @@ class RadioController extends React.Component {
       selectedPlayer: null,
       selectedPlayerID: null,
       selectedPlayerMetaData: null,
-      cometD: new _lib.CometD(),      
+      cometD: new _lib.CometD(),
     }
     this.havePlayers = false;
     this.firedupcometd = false;
-    this.counter = 0;    
+    this.counter = 0;
 
   }
 
@@ -140,16 +145,16 @@ class RadioController extends React.Component {
         cometd.subscribe('/' + cometd.getClientId() + '/**', (res) => { this.handleCometDMessage(res); });
         cometd.subscribe('/slim/subscribe',
           function (res) { },
-          { data: { response: '/' + cometd.getClientId() + '/slim/serverstatus', request: ['', ['serverstatus', 0, 30, 'subscribe:60']] } });        
+          { data: { response: '/' + cometd.getClientId() + '/slim/serverstatus', request: ['', ['serverstatus', 0, 30, 'subscribe:60']] } });
       }
     });
 
-    cometd.addListener('/meta/disconnect', function(message) {
+    cometd.addListener('/meta/disconnect', function (message) {
 
       console.log("connnecting, what happened in 'ere ?");
       console.log(message);
-      
-  });
+
+    });
 
 
     cometd.addListener('/meta/connect', (message) => {
@@ -186,37 +191,37 @@ class RadioController extends React.Component {
 
     console.log("Unsubscribe: " + id);
     cometd.subscribe('/slim/subscribe', function (res) { },
-        { data: { response: '/' + cometd.getClientId() + '/slim/playerstatus/' + id, request: [id, ["status", "-", 1, "subscribe:-"]] } });
-}
+      { data: { response: '/' + cometd.getClientId() + '/slim/playerstatus/' + id, request: [id, ["status", "-", 1, "subscribe:-"]] } });
+  }
 
   playerSubscribe(cometd, id) {
 
-    console.log("Subscribe: " + id  + " Client id : " + cometd.getClientId());
+    console.log("Subscribe: " + id + " Client id : " + cometd.getClientId());
 
     cometd.subscribe('/slim/subscribe', function (res) { },
-        { data: { response: '/' + cometd.getClientId() + '/slim/playerstatus/' + id, request: [id, ["status", "-", 1, "tags:cdegiloqrstyAABKNST", "subscribe:30"]] } }); 
+      { data: { response: '/' + cometd.getClientId() + '/slim/playerstatus/' + id, request: [id, ["status", "-", 1, "tags:cdegiloqrstyAABKNST", "subscribe:30"]] } });
 
-}
+  }
 
 
   handleCometDMessage(msg) {
-    console.log("COMETD Message");    
-    
-    const msgType = msg.channel.indexOf('/slim/playerstatus/')>0?'player':'server';
+    console.log("COMETD Message");
+
+    const msgType = msg.channel.indexOf('/slim/playerstatus/') > 0 ? 'player' : 'server';
 
     if (msgType === 'player') {
       console.log("Player status cometD");
       const metadata = msg.data;
       console.log(metadata);
-        this.setState({
-          selectedPlayerMetaData : metadata,
-        });
+      this.setState({
+        selectedPlayerMetaData: metadata,
+      });
     } else {
       console.log("server status cometD");
     }
-    
 
-}
+
+  }
 
   componentDidMount() {
     this.counter++;
@@ -259,7 +264,7 @@ class RadioController extends React.Component {
     const prevPlayer = this.state.selectedPlayerID;
     if (prevPlayer) {
       this.playerUnsubscribe(this.state.cometD, prevPlayer);
-    }   
+    }
 
     this.setState({
       selectedPlayer: player,
@@ -273,11 +278,12 @@ class RadioController extends React.Component {
   render() {
     const players = this.state.players;
     const playerID = this.state.selectedPlayerID;
-    console.log("Rendor " + this.counter);    
+    console.log("Rendor " + this.counter);
     const playerMetaData = this.state.selectedPlayerMetaData;
-    
 
-    return (<div className="radio-controller">
+
+    return (
+    <div className="radio-controller">
       <AppBar position="static">
         <Toolbar>
           <IconButton
@@ -293,13 +299,22 @@ class RadioController extends React.Component {
             Radio Controller
           </Typography>
           <PlayerSelect players={players}
-            selectedPlayerID={playerID}            
+            selectedPlayerID={playerID}
             onChange={(p) => this.playerChange(p)} />
         </Toolbar>
       </AppBar>
       <Player playerID={playerID}
         selectedPlayerMetaData={playerMetaData}
-        />      
+      />
+      <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
+        <BottomNavigation
+          showLabels         
+        >
+          <BottomNavigationAction label="Player" icon={<RestoreIcon />} />
+          <BottomNavigationAction label="Radio Favourites" icon={<FavoriteIcon />} />
+          <BottomNavigationAction label="Schedule" icon={<ArchiveIcon />} />
+        </BottomNavigation>
+      </Paper>
 
     </div>
     );

@@ -26,7 +26,6 @@ class PresetButtons extends React.Component {
             </Stack>
         );
     }
-
 }
 
 export default PresetButtons;

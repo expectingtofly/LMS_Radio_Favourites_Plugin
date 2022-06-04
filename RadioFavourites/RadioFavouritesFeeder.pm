@@ -212,7 +212,8 @@ sub getStationsForFolder {
 							RFendTime => $result->{endTime},
 							RFstationName => $result->{stationName},
 							RFtitle => $result->{title},
-							RFdescription => $result->{description},							
+							RFdescription => $result->{description},
+							RFstationImage => $result->{stationImage},							
 							itemActions => {
 								info => {
 									command     => ['radiofavourites', 'manage'],

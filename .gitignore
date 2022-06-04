@@ -4,3 +4,5 @@ betarepo.xml
 *.zip
 
 .vstags
+
+JSController/lms-radio-controller/node_modules/

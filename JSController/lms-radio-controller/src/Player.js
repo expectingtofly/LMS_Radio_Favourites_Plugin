@@ -198,11 +198,16 @@ class Player extends React.Component {
         console.log(remoteMeta);
         console.log("artwork " + artwork);
 
+        const temp =  <Stack direction="column" sx={{  width:4/10, padding: 1 }}>
+        <RadioFavourites 
+        favourites = {favourites}
+        onClick={(url) => this.handlePresetClick(url)} />
+        </Stack>
+
 
 
         return (             
-             <Stack sx={{ height: 500 }}
-                direction="row">
+           <React.Fragment>                
                 <Stack direction="column" sx={{ width: 80, padding: 1 }}>
                     <PresetButtons
                         presets={presets}
@@ -213,7 +218,7 @@ class Player extends React.Component {
                 </Stack>
                 <Stack direction="column" spacing={2} sx={{
                     padding: 1,
-                    width : 4/10                    
+                    width : 8/10                    
                 }} >
                     <Card sx={{ height: "auto", minHeight: 500, }}>
                         <CardMedia sx={{ width: "auto", height: 5 / 10, px: 4, py: 2, mx: "auto" }} component="img"
@@ -238,13 +243,8 @@ class Player extends React.Component {
                         </Box>
 
                     </Card>
-                </Stack>
-                <Stack direction="column" sx={{  width:4/10, padding: 1 }}>
-                <RadioFavourites 
-                favourites = {favourites}
-                onClick={(url) => this.handlePresetClick(url)} />
-                </Stack>
-            </Stack>           
+                </Stack>               
+            </React.Fragment>        
 
         );
     }
