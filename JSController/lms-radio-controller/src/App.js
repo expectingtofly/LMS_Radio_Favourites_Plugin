@@ -11,14 +11,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Menu from '@mui/material/Menu';
 import Button from '@mui/material/Button';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import RestoreIcon from '@mui/icons-material/Restore';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import ArchiveIcon from '@mui/icons-material/Archive';
-
-import Paper from '@mui/material/Paper';
-import BottomNavigation from '@mui/material/BottomNavigation';
-import BottomNavigationAction from '@mui/material/BottomNavigationAction';
-
 
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -99,7 +91,7 @@ class RadioController extends React.Component {
       selectedPlayer: null,
       selectedPlayerID: null,
       selectedPlayerMetaData: null,
-      cometD: new _lib.CometD(),
+      cometD: new _lib.CometD(),      
     }
     this.havePlayers = false;
     this.firedupcometd = false;
@@ -281,7 +273,7 @@ class RadioController extends React.Component {
     console.log("Rendor " + this.counter);
     const playerMetaData = this.state.selectedPlayerMetaData;
 
-
+ 
     return (
     <div className="radio-controller">
       <AppBar position="static">
@@ -305,16 +297,7 @@ class RadioController extends React.Component {
       </AppBar>
       <Player playerID={playerID}
         selectedPlayerMetaData={playerMetaData}
-      />
-      <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
-        <BottomNavigation
-          showLabels         
-        >
-          <BottomNavigationAction label="Player" icon={<RestoreIcon />} />
-          <BottomNavigationAction label="Radio Favourites" icon={<FavoriteIcon />} />
-          <BottomNavigationAction label="Schedule" icon={<ArchiveIcon />} />
-        </BottomNavigation>
-      </Paper>
+      />   
 
     </div>
     );
