@@ -16,14 +16,14 @@ const SmallAvatar = styled(Avatar)(({ theme }) => ({
     width: 25,
     height: 25,
     border: `1px solid ${theme.palette.background.paper}`,
-  }));
+}));
 
 class RadioFavourites extends React.Component {
 
     trimstring(instring) {
         var maxLength = 60;
 
-        if (instring.length) {
+        if (!(instring === null) && instring.length) {
             var trimmedString = instring.substr(0, maxLength);
 
             if (trimmedString.length < instring.length) {
@@ -43,7 +43,7 @@ class RadioFavourites extends React.Component {
 
         const favourites = this.props.favourites;
         const current = Math.trunc(Date.now() / 1000);
-
+        console.log("here are favourites");
         console.log(favourites);
 
         const favs = favourites.map((fav, index) => {
@@ -58,16 +58,16 @@ class RadioFavourites extends React.Component {
             const start = ("0" + ds.getHours()).slice(-2) + ":" + ("0" + ds.getMinutes()).slice(-2);
             const end = ("0" + de.getHours()).slice(-2) + ":" + ("0" + de.getMinutes()).slice(-2);
 
-            const imageurl = fav.stationImage?fav.stationImage.replace("bbc_radio_fourfm", "bbc_radio_four"):null;
+            const imageurl = fav.stationImage ? fav.stationImage.replace("bbc_radio_fourfm", "bbc_radio_four") : null;
 
             const stationImage = fav.stationImage ?
-                <Badge  overlap="circular" anchorOrigin={{
+                <Badge overlap="circular" anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'right',
                 }}
-                badgeContent={
-                 <SmallAvatar src={imageurl} />
-                } >
+                    badgeContent={
+                        <SmallAvatar src={imageurl} />
+                    } >
                     <Avatar sx={{ width: 75, height: 75, mr: 1 }} alt={fav.stationName} src={fav.image} />
                 </Badge>
                 :
@@ -97,14 +97,14 @@ class RadioFavourites extends React.Component {
                             />
                         </ListItemButton>
                     </ListItem>
-                    <Box key={"favbox" + index} sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box sx={{ minWidth: 35 }}>
+                    <Box key={"favbox" + index} sx={{ display: 'flex', alignItems: 'center', px:3 }}>
+                        <Box key={"starttext" + index} sx={{ minWidth: 35 }}>
                             <Typography variant="body2" color="text.secondary">{start}</Typography>
                         </Box>
-                        <Box sx={{ width: '100%', ml: 1, mr: 1 }}>
+                        <Box key={"progress" + index} sx={{ width: '100%', ml: 1, mr: 1 }}>
                             <LinearProgress variant="determinate" value={progress} />
                         </Box>
-                        <Box sx={{ minWidth: 35 }}>
+                        <Box key={"until" + index}sx={{ minWidth: 35 }}>
                             <Typography variant="body2" color="text.secondary">{end}</Typography>
                         </Box>
                     </Box>

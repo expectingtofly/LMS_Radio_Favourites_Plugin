@@ -91,7 +91,7 @@ class RadioController extends React.Component {
       selectedPlayer: null,
       selectedPlayerID: null,
       selectedPlayerMetaData: null,
-      cometD: new _lib.CometD(),      
+      cometD: new _lib.CometD(),
     }
     this.havePlayers = false;
     this.firedupcometd = false;
@@ -227,10 +227,13 @@ class RadioController extends React.Component {
           (result) => {
             console.log('got players');
             console.log(result.data);
+
             if (result.data) {
+
               this.setState({
                 players: result.data,
               });
+
             }
             else {
               this.setState({
@@ -273,33 +276,35 @@ class RadioController extends React.Component {
     console.log("Rendor " + this.counter);
     const playerMetaData = this.state.selectedPlayerMetaData;
 
- 
-    return (
-    <div className="radio-controller">
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Radio Controller
-          </Typography>
-          <PlayerSelect players={players}
-            selectedPlayerID={playerID}
-            onChange={(p) => this.playerChange(p)} />
-        </Toolbar>
-      </AppBar>
-      <Player playerID={playerID}
-        selectedPlayerMetaData={playerMetaData}
-      />   
+    const player = playerID
+      ? <Player playerID={playerID}
+        selectedPlayerMetaData={playerMetaData} />
+      : null;
 
-    </div>
+
+    return (
+      <div className="radio-controller">
+        <AppBar position="static">
+          <Toolbar>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Radio Controller
+            </Typography>
+            <PlayerSelect players={players}
+              selectedPlayerID={playerID}
+              onChange={(p) => this.playerChange(p)} />
+          </Toolbar>
+        </AppBar>
+        {player}
+      </div>
     );
   }
 }

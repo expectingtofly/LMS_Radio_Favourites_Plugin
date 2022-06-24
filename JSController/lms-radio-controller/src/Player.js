@@ -1,9 +1,12 @@
 import React from 'react';
 import Stack from '@mui/material/Stack';
+import Container from '@mui/material/Container';
 import Card from '@mui/material/Card';
 import CardMedia from '@mui/material/CardMedia';
+
 import PresetButtons from './PresetButtons';
 import RadioFavourites from './RadioFavourites';
+import Schedule from './Schedule';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -30,7 +33,7 @@ function MediaButtons(props) {
     const playStatus = props.playStatus;
 
     return (
-        <React.Fragment>
+        <Container>
             <IconButton aria-label="previous">
                 <RewindIcon />
             </IconButton>
@@ -43,7 +46,7 @@ function MediaButtons(props) {
             <IconButton aria-label="next">
                 <FastForwardIcon />
             </IconButton>
-        </React.Fragment>
+        </Container>
     );
 }
 
@@ -64,7 +67,6 @@ class Player extends React.Component {
     }
 
     getNowPlaying(playerId) {
-        console.log("About to call");
         fetch("/api/players/" + playerId + "/queue")
             .then(res => res.json())
             .then(
@@ -76,7 +78,6 @@ class Player extends React.Component {
                         cover: result.data[0].coverUrl,
                     }
 
-                    console.log("done now playing");
                     this.setState({
                         nowPlaying: np,
                     });
@@ -104,7 +105,7 @@ class Player extends React.Component {
     }
 
     getFavourites(playerId) {
-        fetch("/api/players/" + playerId + "/radiofavourites")
+        fetch("/api/radiofavourites")
             .then(res => res.json())
             .then(
                 (result) => {
@@ -188,7 +189,6 @@ class Player extends React.Component {
 
     render() {
         console.log("render");
-        console.log(this.props.selectedPlayerMetaData);
         const meta = this.props.selectedPlayerMetaData;
         const remoteMeta = this.props.selectedPlayerMetaData ? this.props.selectedPlayerMetaData.remoteMeta : null;
         const artwork = remoteMeta && remoteMeta.artwork_url ? remoteMeta.artwork_url : '';
@@ -205,9 +205,6 @@ class Player extends React.Component {
 
         const presets = this.state.presets.slice();
 
-        console.log("Remote Data" + ((time / duration) * 100));
-        console.log(remoteMeta);
-        console.log("artwork " + artwork);
 
         const navValue = this.state.navValue;
 
@@ -217,57 +214,70 @@ class Player extends React.Component {
                 favourites={favourites}
                 onClick={(url) => this.handlePresetClick(url)} />;
 
+        const viewSchedule =
+            <Schedule favourites={favourites} />;
+
 
         const viewPlay =
             <React.Fragment>
-                <Stack direction="row">
-                    <Stack direction="column" sx={{ width: 80, padding: 1 }}>
-                        <PresetButtons
-                            presets={presets}
-                            firstPreset={0}
-                            lastPreset={3}
-                            onClick={(url) => this.handlePresetClick(url)} >
-                        </PresetButtons>
-                    </Stack>
-                    <Stack direction="column" spacing={2} sx={{
-                        padding: 1,
-                        width: 8 / 10
-                    }} >
-                        <Card sx={{ height: "auto", minHeight: 500, }}>
-                            <CardMedia sx={{ width: "auto", height: 5 / 10, px: 4, py: 2, mx: "auto" }} component="img"
+                <Stack direction="column" alignItems="center" justifyContent="space-between" spacing={2}>
+
+
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ height: 500}} >
+
+                        <Stack direction="column" sx={{ width: 80, padding: 1 }}>
+                            <PresetButtons
+                                presets={presets}
+                                firstPreset={0}
+                                lastPreset={3}
+                                onClick={(url) => this.handlePresetClick(url)} >
+                            </PresetButtons>
+                        </Stack>
+
+                        <Card sx={{ p: 1 }}>
+                            <CardMedia component="img" 
                                 alt="Nothing"
-                                image={artwork}>
+                                image={artwork}
+                                >
                             </CardMedia>
-                            <Box sx={{ height: 4 / 10, p: 1, border: '1px dashed grey' }}>
-                                <Typography gutterBottom variant="subtitle1" component="div">
-                                    {title}
-                                </Typography>
-                                <Typography gutterBottom variant="subtitle2" component="div">
-                                    {artist}
-                                </Typography>
-                                <Typography gutterBottom variant="subtitle2" component="div">
-                                    {album}
-                                </Typography>
-                            </Box>
-                            <Box sx={{ height: 1 / 10, alignItems: 'center' }}>
-                                <MediaButtons
-                                    playStatus={playStatus}
-                                    onClick={(pStatus) => this.handlePlayClick(pStatus)} />
-                            </Box>
+                            <Typography gutterBottom variant="subtitle1" component="div">
+                                {title}
+                            </Typography>
+
+                            <Typography gutterBottom variant="subtitle2" component="div">
+                                {artist}
+                            </Typography>
+                            <Typography gutterBottom variant="subtitle2" component="div">
+                                {album}
+                            </Typography>
+
                         </Card>
+
+
+
+
+                        <Stack direction="column" sx={{ width: 80, padding: 1 }}>
+                            <PresetButtons
+                                presets={presets}
+                                firstPreset={4}
+                                lastPreset={7}
+                                onClick={(url) => this.handlePresetClick(url)} >
+                            </PresetButtons>
+                        </Stack>
+
                     </Stack>
-                    <Stack direction="column" sx={{ width: 80, padding: 1 }}>
-                        <PresetButtons
-                            presets={presets}
-                            firstPreset={4}
-                            lastPreset={7}
-                            onClick={(url) => this.handlePresetClick(url)} >
-                        </PresetButtons>
-                    </Stack>
+
+
+                    <Box sx={{ p: 1, border: '1px dashed grey', textAlign: 'Center' }}>
+                        <MediaButtons
+                            playStatus={playStatus}
+                            onClick={(pStatus) => this.handlePlayClick(pStatus)} />
+                    </Box>
                 </Stack>
+
             </React.Fragment>;
-        
-        const viewNav = navValue === "player" ? viewPlay : viewFavourites;
+
+        const viewNav = navValue === "player" ? viewPlay : navValue === "favourites" ? viewFavourites : viewSchedule;
 
         return (
 
@@ -285,8 +295,8 @@ class Player extends React.Component {
                         }}
                     >
                         <BottomNavigationAction value="player" label="Player" icon={<RestoreIcon />} />
+                        <BottomNavigationAction value="schedule" label="EPG" icon={<ArchiveIcon />} />
                         <BottomNavigationAction value="favourites" label="Radio Favourites" icon={<FavoriteIcon />} />
-                        <BottomNavigationAction value="schedule" label="Schedule" icon={<ArchiveIcon />} />
                     </BottomNavigation>
                 </Paper>
             </React.Fragment>

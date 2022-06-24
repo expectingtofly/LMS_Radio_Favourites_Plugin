@@ -213,7 +213,7 @@ sub getStationsForFolder {
 							RFstationName => $result->{stationName},
 							RFtitle => $result->{title},
 							RFdescription => $result->{description},
-							RFstationImage => $result->{stationImage},							
+							RFstationImage => $result->{stationImage},
 							itemActions => {
 								info => {
 									command     => ['radiofavourites', 'manage'],
@@ -299,7 +299,7 @@ sub getStationsForFolder {
 
 
 sub getAllStations{
-	my ( $callback ) = @_;
+	my ($callback) = @_;
 
 
 	my $menu = [];
@@ -307,6 +307,7 @@ sub getAllStations{
 	getStationsForFolder($stationList, 1, '__all__', $menu, sub { $callback->($menu); });
 
 }
+
 
 sub arrangeMenus{
 	my $menu =shift;
@@ -384,6 +385,24 @@ sub getFunctionFromKey {
 		}
 	}
 	$log->error("No Function Key Found");
+	return;
+}
+
+
+sub getScheduleFunctionFromKey {
+	my $key = shift;
+
+	my $handlerList = Plugins::RadioFavourites::Plugin::getHandlers();
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("Schedule Function Key $key");
+
+	for my $handler (@$handlerList) {
+		if ($handler->{handlerSchedule} && $handler->{handlerFunctionKey} eq $key) {
+			main::DEBUGLOG && $log->is_debug && $log->debug("Found $key");
+			return $handler->{handlerSchedule};
+		}
+	}
+	$log->warn("No Schedule Function Key Found");
 	return;
 }
 
@@ -601,6 +620,95 @@ sub _flushStationCache {
 
 	main::DEBUGLOG && $log->is_debug && $log->debug("--_removeCacheMenu");
 	return;
+}
+
+
+sub getSchedules {
+	my $date = shift;
+	my $cbSuccess =  shift;
+	my $cbError =  shift;
+	main::DEBUGLOG && $log->is_debug && $log->debug("--getSchedules");
+
+
+	my $stationList = Plugins::RadioFavourites::Plugin::getStationList();
+	my $count = 0;
+	my $numberOfStations = scalar @$stationList;
+	my $response = [];
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("station list " .  Dumper($stationList));
+
+	for my $station (@$stationList) {
+
+		main::DEBUGLOG && $log->is_debug && $log->debug("station $station");
+
+		if (my $cachedSched = _getCachedItem("schedule-$date-" . $station->{url})) {
+			main::DEBUGLOG && $log->is_debug && $log->debug("schedule from cache " . $station->{url});
+			push @$response,
+			  {
+				'station'=> $station->{url},
+				'schedule' => $cachedSched,
+			  };
+			$count++;
+			main::DEBUGLOG && $log->is_debug && $log->debug("$count of $numberOfStations");
+			if ($count >= $numberOfStations) {
+				main::DEBUGLOG && $log->is_debug && $log->debug("Calling back");
+				$cbSuccess->($response);
+			}
+
+		} else {
+
+			if (my $func = getScheduleFunctionFromKey$station->{handlerFunctionKey}) {
+
+				main::DEBUGLOG && $log->is_debug && $log->debug("calling Function");
+				$func->(
+					$station->{url},
+					$station->{stationKey},
+					$station->{name},
+					$date,
+					sub {
+						my $sched = shift;
+						$count++;
+						main::DEBUGLOG && $log->is_debug && $log->debug("$count of $numberOfStations");
+						main::DEBUGLOG && $log->is_debug && $log->debug("got schedule for " . $station->{stationKey});
+						push @$response,
+						  {
+							'station'=> $station->{url},
+							'schedule' => $sched,
+						  };
+
+						_cacheItem("schedule-$date-" . $station->{url}, $sched, 480);
+						main::DEBUGLOG && $log->is_debug && $log->debug(Dumper($response));
+						if ($count >= $numberOfStations) {
+							main::DEBUGLOG && $log->is_debug && $log->debug("Calling back");
+							$cbSuccess->($response);
+						}
+					},
+					sub {
+						main::DEBUGLOG && $log->is_debug && $log->debug("error schedule for " . $station->{stationKey});
+
+						$count++;
+						main::DEBUGLOG && $log->is_debug && $log->debug("$count of $numberOfStations");
+						if ($count >= $numberOfStations) {
+							main::DEBUGLOG && $log->is_debug && $log->debug("Calling back");
+							$cbSuccess->($response);
+
+						}
+					}
+				);
+			}else {
+				main::DEBUGLOG && $log->is_debug && $log->debug("no schedule function for " . $station->{stationKey});
+				$count++;
+				main::DEBUGLOG && $log->is_debug && $log->debug("$count of $numberOfStations");
+				if ($count >= $numberOfStations) {
+					main::DEBUGLOG && $log->is_debug && $log->debug("Calling back");
+					$cbSuccess->($response);
+
+				}
+			}
+		}
+
+	}
+
 }
 
 1;
