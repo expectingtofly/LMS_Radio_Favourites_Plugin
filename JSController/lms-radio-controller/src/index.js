@@ -7,28 +7,20 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
-    type: 'light',
-    primary: {
-      main: '#4d1117',
-    },
-    secondary: {
-      main: '#114d47',
-    },
-    background: {
-      default: '#fff',
-      paper: '#fff',
-    },
+    mode: 'light',    
   },
 }
 );
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+
+
+root.render(  
   <React.StrictMode>
     <CssBaseline enableColorScheme />
     <ThemeProvider theme={theme}>
-      <App />
+      <App themePalette={theme.palette} />
     </ThemeProvider>
   </React.StrictMode>
 );

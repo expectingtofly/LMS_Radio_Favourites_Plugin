@@ -275,10 +275,15 @@ class RadioController extends React.Component {
     const playerID = this.state.selectedPlayerID;
     console.log("Rendor " + this.counter);
     const playerMetaData = this.state.selectedPlayerMetaData;
+    const themePalette = this.props.themePalette;
+
+    console.log('theme ');
+    console.log(this.props.themePalette);
 
     const player = playerID
       ? <Player playerID={playerID}
-        selectedPlayerMetaData={playerMetaData} />
+        selectedPlayerMetaData={playerMetaData}
+        themePalette = {themePalette} />
       : null;
 
 
@@ -309,9 +314,9 @@ class RadioController extends React.Component {
   }
 }
 
-function App() {
+function App(props) {  
   return (
-    <RadioController />
+    <RadioController themePalette={props.themePalette}/>
   );
 }
 

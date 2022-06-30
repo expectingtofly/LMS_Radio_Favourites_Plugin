@@ -9,6 +9,9 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import LinearProgress from '@mui/material/LinearProgress';
 import Box from '@mui/material/Box';
 import Badge from '@mui/material/Badge';
+import Fab from '@mui/material/Fab';
+import AddIcon from '@mui/icons-material/Add';
+
 
 import { styled } from '@mui/material/styles';
 
@@ -97,14 +100,14 @@ class RadioFavourites extends React.Component {
                             />
                         </ListItemButton>
                     </ListItem>
-                    <Box key={"favbox" + index} sx={{ display: 'flex', alignItems: 'center', px:3 }}>
+                    <Box key={"favbox" + index} sx={{ display: 'flex', alignItems: 'center', px: 3 }}>
                         <Box key={"starttext" + index} sx={{ minWidth: 35 }}>
                             <Typography variant="body2" color="text.secondary">{start}</Typography>
                         </Box>
                         <Box key={"progress" + index} sx={{ width: '100%', ml: 1, mr: 1 }}>
                             <LinearProgress variant="determinate" value={progress} />
                         </Box>
-                        <Box key={"until" + index}sx={{ minWidth: 35 }}>
+                        <Box key={"until" + index} sx={{ minWidth: 35 }}>
                             <Typography variant="body2" color="text.secondary">{end}</Typography>
                         </Box>
                     </Box>
@@ -114,9 +117,26 @@ class RadioFavourites extends React.Component {
         });
 
         return (
-            <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                {favs}
-            </List >
+            <React.Fragment>
+                <List sx={{
+                    width: '100%',
+                    bgcolor: 'background.paper',
+                    position: 'relative',
+                    overflow: 'auto',
+                    maxHeight: 550,
+                }} >
+                    {favs}
+                </List >
+                <Fab sx={{
+                    position: 'absolute',
+                    bottom: 50,
+                    right: 8
+                }}
+                    color='primary'>
+                    <AddIcon />
+                </Fab>
+            </React.Fragment>
+
         );
     }
 

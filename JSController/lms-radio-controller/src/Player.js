@@ -15,9 +15,9 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 
-import RestoreIcon from '@mui/icons-material/Restore';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import ArchiveIcon from '@mui/icons-material/Archive';
+import ViewListIcon from '@mui/icons-material/ViewList';
 
 import Paper from '@mui/material/Paper';
 import BottomNavigation from '@mui/material/BottomNavigation';
@@ -30,7 +30,7 @@ import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 
 function MediaButtons(props) {
     const playIcon = props.playStatus === 'play' ? <PauseIcon sx={{ height: 38, width: 38 }} /> : <PlayArrowIcon sx={{ height: 38, width: 38 }} />
-    const playStatus = props.playStatus;
+    const playStatus = props.playStatus;    
 
     return (
         <Container>
@@ -91,8 +91,8 @@ class Player extends React.Component {
     getPresets(playerId) {
         fetch("/api/players/" + playerId + "/presets")
             .then(res => res.json())
-            .then(
-                (result) => {
+            .then(                
+                (result) => {                    
                     this.setState({
                         presets: result.data,
                     });
@@ -109,8 +109,9 @@ class Player extends React.Component {
             .then(res => res.json())
             .then(
                 (result) => {
+                    var objs = result.data.sort((a, b) => (a.stationName > b.stationName) ? 1 : ((b.stationName > a.stationName) ? -1 : 0))
                     this.setState({
-                        radioFavourites: result.data,
+                        radioFavourites: objs,
                     });
                 },
                 (error) => {
@@ -195,6 +196,7 @@ class Player extends React.Component {
         const title = remoteMeta && remoteMeta.title ? remoteMeta.title : '';
         const artist = remoteMeta && remoteMeta.artist ? remoteMeta.artist : '';
         const album = remoteMeta && remoteMeta.remote_title ? remoteMeta.remote_title : (remoteMeta?.album ? remoteMeta.album : '');
+        const themePalette =  this.props.themePalette;
 
 
         const duration = meta && meta.duration ? meta.duration : 1;
@@ -215,15 +217,16 @@ class Player extends React.Component {
                 onClick={(url) => this.handlePresetClick(url)} />;
 
         const viewSchedule =
-            <Schedule favourites={favourites} />;
+            <Schedule favourites={favourites}
+                     themePalette={themePalette} />;
 
 
         const viewPlay =
-            <React.Fragment>
-                <Stack direction="column" alignItems="center" justifyContent="space-between" spacing={2}>
 
+            <Box sx={{ backgroundColor: 'background.default' }} >
+                <Stack direction="column"  justifyContent="space-between" spacing={2}>
 
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ height: 500}} >
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} >
 
                         <Stack direction="column" sx={{ width: 80, padding: 1 }}>
                             <PresetButtons
@@ -234,28 +237,17 @@ class Player extends React.Component {
                             </PresetButtons>
                         </Stack>
 
-                        <Card sx={{ p: 1 }}>
-                            <CardMedia component="img" 
+
+                        <Paper sx={{ p: 1 }}>
+
+                            <CardMedia component="img"
                                 alt="Nothing"
                                 image={artwork}
-                                >
+                                sx={{ maxHeight: 200, maxWidth: 200 }}
+                            >
                             </CardMedia>
-                            <Typography gutterBottom variant="subtitle1" component="div">
-                                {title}
-                            </Typography>
 
-                            <Typography gutterBottom variant="subtitle2" component="div">
-                                {artist}
-                            </Typography>
-                            <Typography gutterBottom variant="subtitle2" component="div">
-                                {album}
-                            </Typography>
-
-                        </Card>
-
-
-
-
+                        </Paper>
                         <Stack direction="column" sx={{ width: 80, padding: 1 }}>
                             <PresetButtons
                                 presets={presets}
@@ -267,15 +259,29 @@ class Player extends React.Component {
 
                     </Stack>
 
+                    <Container sx={{ p: 1,  textAlign: 'Center' }}>
+                        <Typography gutterBottom variant="subtitle1" component="div">
+                            {title}
+                        </Typography>
 
-                    <Box sx={{ p: 1, border: '1px dashed grey', textAlign: 'Center' }}>
+                        <Typography gutterBottom variant="subtitle2" component="div">
+                            {artist}
+                        </Typography>
+                        <Typography gutterBottom variant="subtitle2" component="div">
+                            {album}
+                        </Typography>
+                    </Container>
+
+                    <Box sx={{ p: 1,  textAlign: 'Center' }}>
                         <MediaButtons
                             playStatus={playStatus}
                             onClick={(pStatus) => this.handlePlayClick(pStatus)} />
                     </Box>
-                </Stack>
 
-            </React.Fragment>;
+                </Stack>
+            </Box>;
+
+
 
         const viewNav = navValue === "player" ? viewPlay : navValue === "favourites" ? viewFavourites : viewSchedule;
 
@@ -283,7 +289,7 @@ class Player extends React.Component {
 
             <React.Fragment>
                 {viewNav}
-                <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
+                <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 'top' }} elevation={3}>
                     <BottomNavigation
                         showLabels
 
@@ -294,8 +300,8 @@ class Player extends React.Component {
                             })
                         }}
                     >
-                        <BottomNavigationAction value="player" label="Player" icon={<RestoreIcon />} />
-                        <BottomNavigationAction value="schedule" label="EPG" icon={<ArchiveIcon />} />
+                        <BottomNavigationAction value="player" label="Player" icon={<PlayCircleOutlineIcon />} />
+                        <BottomNavigationAction value="schedule" label="EPG" icon={<ViewListIcon />} />
                         <BottomNavigationAction value="favourites" label="Radio Favourites" icon={<FavoriteIcon />} />
                     </BottomNavigation>
                 </Paper>
