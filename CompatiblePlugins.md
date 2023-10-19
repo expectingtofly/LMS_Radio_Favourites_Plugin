@@ -2,5 +2,6 @@ The current list of LMS plugins that are compatible with the Radio Favourites Pl
 
 * BBC Sounds Plugin
 * Times Radio Plugin
-* UK Radio Player Plugin
+* Global Player (UK) Plugin
 * Virgin Radio (UK) Plugin
+* UK Radio Player (Deprecated)
